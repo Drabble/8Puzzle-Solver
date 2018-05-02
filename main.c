@@ -6,6 +6,7 @@
  */
 
 #include <omp.h>
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -13,9 +14,44 @@
 
 int* board;
 
-struct Node{
+/*struct Node{
     int*
-};
+};*/
+
+
+void shuffle(int *board, size_t n)
+{
+    srand(time(NULL));
+    if (n > 1) 
+    {
+        size_t i;
+        for (i = 1; i < n - 1; i++) 
+        {
+            size_t j = rand() % (i + 1);
+            if (j == 0)
+                j = 1;
+
+            int tmp = board[j];
+            board[j] = board[i];
+            board[i] = tmp;
+        }
+    }
+}
+
+void print_board(int *board, size_t size){
+    for(size_t i = 0; i < size; i++){
+        for (size_t j = 0; j < size; j++)
+            printf("%d ", board[i + j * size]);
+        printf("\n");
+    }
+}
+
+/*void dfs(){
+    #pragma omp parallel{
+        #pragma omp for shared(board)
+
+    }
+}*/
 
 int main(int argc, char *argv[]) {
     // Create 2d array
@@ -33,14 +69,11 @@ int main(int argc, char *argv[]) {
         board[i] = i;
     }
 
-    dfs();
+    shuffle(board, (size_t) BOARD_SIZE * BOARD_SIZE);
+
+    print_board(board, (size_t) BOARD_SIZE);
+
+    //dfs();
 
     return EXIT_SUCCESS;
-}
-
-void dfs(){
-    #pragma omp parallel{
-        #pragma omp for shared(board)
-
-    }
 }
