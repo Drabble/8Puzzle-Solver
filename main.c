@@ -11,79 +11,21 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <math.h>
+#include "hashmap.c"
 
 #define BOARD_SIZE 3
 
-struct queue_item {
-    int* content;
-    struct queue_item* next;
-    struct queue_item* prec;
-};
-struct queue_root {
-    struct queue_item* head;
-    struct queue_item* tail;
-};
-
-void init_queue(struct queue_root* queue){
-    queue->head = queue->tail = NULL;
-}
-
-void push_queue(struct queue_root* queue, int* content, struct queue_item* prec){
-    struct queue_item *item = malloc(sizeof(struct queue_item));
-    item->content = content;
-    item->next = NULL;
-    item->prec = prec;
-    if (queue->head == NULL){
-        queue->head = queue->tail = item;
-    } else {
-        queue->tail = queue->tail->next = item;
-    }
-}
-
-int exists_queue(struct queue_root* queue, const int* content, int contentSize){
-    struct queue_item* item = queue->head;
-    while(item != NULL){
-        int same = 1;
-        int i;
-        for(i = 0; i < contentSize; i++){
-            if(item->content[i] != content[i]){
-                same = 0;
-                break;
-            }
-        }
-        if(same == 1){
-            return 1;
-        }
-        item = item->next;
-    }
-    return 0;
-}
-
-int free_queue(struct queue_root* queue){
-    struct queue_item* item = queue->tail;
-    while(item != NULL){
-        struct queue_item* prec = item->prec;
-        free(item);
-        item = prec;
-    }
-    return 0;
-}
-
-void swap(int* board, size_t from, size_t to){
+void swap(int *board, size_t from, size_t to) {
     int tmp = board[to];
     board[to] = board[from];
     board[from] = tmp;
 }
 
-
-void shuffle(int *array, size_t n)
-{
+void shuffle(int *array, size_t n) {
     srand(time(NULL));
-    if (n > 1) 
-    {
+    if (n > 1) {
         size_t i;
-        for (i = 1; i < n - 1; i++) 
-        {
+        for (i = 1; i < n - 1; i++) {
             size_t j = rand() % (i + 1);
             if (j == 0)
                 j = 1;
@@ -94,102 +36,96 @@ void shuffle(int *array, size_t n)
 
 }
 
-void print_board(int *board, size_t size){
-    for(size_t i = 0; i < size; i++){
-        for (size_t j = 0; j < size; j++){
-            int b = board[j + i * size];
-
-            if (b == 0)
-                printf("\033[1;31m");
-            printf("%d ", b);
-            if (b == 0)
-                printf("\033[0m");
+void print_board(const int *board, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+        for (size_t j = 0; j < size; j++) {
+            printf("%d ", board[j + i * size]);
         }
         printf("\n");
     }
 }
 
-int bfs(struct queue_root* q){
-    struct queue_item* current = q->head;
+int dfs(struct hashmap *hm, const int board[], int depth) {
 
-    while(current != NULL){
-        // Find 0
-        int pos;
-        for(pos = 0; pos < BOARD_SIZE * BOARD_SIZE; pos++) if(current->content[pos] == 0) break;
-        // Get possible moves
-        int left = pos - BOARD_SIZE;
-        int right = pos + BOARD_SIZE;
-        int up = pos % BOARD_SIZE == 0 ? -1 : pos - 1 ;
-        int down = pos % BOARD_SIZE == BOARD_SIZE - 1 ? -1 : pos + 1;
+    // Find 0
+    int pos;
+    for (pos = 0; pos < BOARD_SIZE * BOARD_SIZE; pos++) if (board[pos] == 0) break;
 
-        int directions[] = {left, right, up, down};
+    // Get possible moves
+    int left = pos - BOARD_SIZE;
+    int right = pos + BOARD_SIZE;
+    int up = pos % BOARD_SIZE == 0 ? -1 : pos - 1;
+    int down = pos % BOARD_SIZE == BOARD_SIZE - 1 ? -1 : pos + 1;
+    int directions[] = {left, right, up, down};
 
-        int i;
-        for(i = 0; i < 4; i++){
-            if(directions[i] >= 0 && directions[i] < BOARD_SIZE * BOARD_SIZE){
-                int* newBoard = malloc(BOARD_SIZE * BOARD_SIZE * sizeof(int));
-                int j;
-                for(j = 0; j < BOARD_SIZE * BOARD_SIZE; j++){
-                    if(j == pos){
-                        newBoard[j] = current->content[directions[i]];
-                    } else if(j == directions[i]){
-                        newBoard[j] = current->content[pos];
-                    } else {
-                        newBoard[j] = current->content[j];
-                    }
-                }
-                int solved = 1;
-                for(j = 0; j < BOARD_SIZE * BOARD_SIZE; j++){
-                    if(j != newBoard[j]){
-                        solved = 0;
-                        break;
-                    }
-                }
-                if(solved == 1){
-                    printf("Solved\n");
-                    printf("Path is (in reverse order): \n");
-                    print_board(newBoard, BOARD_SIZE);
-                    printf("\n");
-                    struct queue_item* path = current;
-                    while(path != NULL){
-                        print_board(path->content, BOARD_SIZE);
-                        printf("\n");
-                        path = path->prec;
-                    }
-                    return 1;
-                }
-                if(exists_queue(q, newBoard, BOARD_SIZE * BOARD_SIZE) == 0){
-                    push_queue(q, newBoard, current);
-                } else{
-                    free(newBoard);
+    int i;
+    for (i = 0; i < 4; i++) {
+        if (directions[i] >= 0 && directions[i] < BOARD_SIZE * BOARD_SIZE) {
+            int *newBoard = malloc(BOARD_SIZE * BOARD_SIZE * sizeof(int));
+            int j;
+
+            // Update the board with the move
+            for (j = 0; j < BOARD_SIZE * BOARD_SIZE; j++) {
+                if (j == pos) {
+                    newBoard[j] = board[directions[i]];
+                } else if (j == directions[i]) {
+                    newBoard[j] = board[pos];
+                } else {
+                    newBoard[j] = board[j];
                 }
             }
+
+            // Check if solved
+            int solved = 1;
+            for (j = 0; j < BOARD_SIZE * BOARD_SIZE; j++) {
+                if (j != newBoard[j]) {
+                    solved = 0;
+                    break;
+                }
+            }
+            if (solved == 1) {
+                printf("Solved\n");
+                printf("Path is (in reverse order): \n");
+                print_board(newBoard, BOARD_SIZE);
+                printf("\n");
+                return 1;
+            }
+
+            // TODO Fix the problem and return the path and limit the depth if(depth > 10)
+            // Dfs
+            if (hashmap_set(hm, newBoard) == 0) {
+                if(dfs(hm, newBoard, depth + 1)){
+                    return 1;
+                }
+            } else {
+                free(newBoard);
+            }
         }
-        current = current->next;
     }
     return 0;
 }
 
+// Hashmap
+// Trouver fonction/heurisitique pour avoir un bon choix initial
+// Trouver une première solution rapidement de façon à éliminer les autres
+// On fait un dfs mais qui s'arrête quand il dépasse une longueur de parcours plus grande que la meilleur solution trouvée jusqu'à maintenant
 int main(int argc, char *argv[]) {
-    int board[] = {1,2,0,3,4,5,6,7,8};
+    int board[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
     //int board[] = {0,1,2,3,4,5,6,7,8};
-    shuffle(board, (size_t) BOARD_SIZE * BOARD_SIZE);
+    //shuffle(board, (size_t) BOARD_SIZE * BOARD_SIZE);
 
     print_board(board, (size_t) BOARD_SIZE);
 
-    struct queue_root* q = malloc(sizeof(struct queue_root));
-    init_queue(q);
+    struct hashmap *hm;
+    hm = hashmap_create(64, BOARD_SIZE * BOARD_SIZE); // TODO: Trouver une bonne taille pour la hashmap
 
-    push_queue(q, board, NULL);
-
-    if(bfs(q) == 1){
+    if (dfs(hm, board, 0) == 1) {
         printf("Found the shortest path");
-    } else{
+    } else {
         printf("Impossible level");
     }
 
-    free_queue(q);
-    // TODO: Free the QUEUE?
+    hashmap_free(hm);
 
     return EXIT_SUCCESS;
 }
