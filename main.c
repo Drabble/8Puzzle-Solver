@@ -59,26 +59,52 @@ int exists_queue(struct queue_root* queue, const int* content, int contentSize){
     return 0;
 }
 
+int free_queue(struct queue_root* queue){
+    struct queue_item* item = queue->tail;
+    while(item != NULL){
+        struct queue_item* prec = item->prec;
+        free(item);
+        item = prec;
+    }
+    return 0;
+}
+
+void swap(int* board, size_t from, size_t to){
+    int tmp = board[to];
+    board[to] = board[from];
+    board[from] = tmp;
+}
+
+
 void shuffle(int *array, size_t n)
 {
     srand(time(NULL));
-    if (n > 1)
+    if (n > 1) 
     {
         size_t i;
-        for (i = 0; i < n - 1; i++)
+        for (i = 1; i < n - 1; i++) 
         {
-            size_t j = i + rand() / (RAND_MAX / (n - i) + 1);
-            int t = array[j];
-            array[j] = array[i];
-            array[i] = t;
+            size_t j = rand() % (i + 1);
+            if (j == 0)
+                j = 1;
+
+            swap(array, i, j);
         }
     }
+
 }
 
 void print_board(int *board, size_t size){
     for(size_t i = 0; i < size; i++){
-        for (size_t j = 0; j < size; j++)
-            printf("%d ", board[i + j * size]);
+        for (size_t j = 0; j < size; j++){
+            int b = board[j + i * size];
+
+            if (b == 0)
+                printf("\033[1;31m");
+            printf("%d ", b);
+            if (b == 0)
+                printf("\033[0m");
+        }
         printf("\n");
     }
 }
@@ -145,9 +171,9 @@ int bfs(struct queue_root* q){
 }
 
 int main(int argc, char *argv[]) {
-    int board[] = {1,0,2,3,4,5,6,7,8};
-
-    //shuffle(board, (size_t) BOARD_SIZE * BOARD_SIZE);
+    int board[] = {1,2,0,3,4,5,6,7,8};
+    //int board[] = {0,1,2,3,4,5,6,7,8};
+    shuffle(board, (size_t) BOARD_SIZE * BOARD_SIZE);
 
     print_board(board, (size_t) BOARD_SIZE);
 
@@ -162,6 +188,7 @@ int main(int argc, char *argv[]) {
         printf("Impossible level");
     }
 
+    free_queue(q);
     // TODO: Free the QUEUE?
 
     return EXIT_SUCCESS;
