@@ -85,9 +85,7 @@ int dfs(struct hashmap *hm, const int board[], int depth) {
         if (directions[i] >= 0 && directions[i] < BOARD_SIZE * BOARD_SIZE) {
             int *newBoard = malloc(BOARD_SIZE * BOARD_SIZE * sizeof(int));
             newBoard = swap(&board, newBoard, BOARD_SIZE * BOARD_SIZE, pos, directions[i]);
-
             if (hashmap_set(hm, newBoard)) {
-
                 if(dfs(hm, newBoard, depth + 1)){
                     free(newBoard);
                     return 1;
@@ -104,6 +102,7 @@ int dfs(struct hashmap *hm, const int board[], int depth) {
 // Trouver fonction/heurisitique pour avoir un bon choix initial
 // Trouver une première solution rapidement de façon à éliminer les autres
 // On fait un dfs mais qui s'arrête quand il dépasse une longueur de parcours plus grande que la meilleur solution trouvée jusqu'à maintenant
+// Distance de manahtan
 int main(int argc, char *argv[]) {
     int board[] = { 1, 2, 0, 3, 4, 5, 6, 7, 8};
     //int board[] = {0,1,2,3,4,5,6,7,8};
