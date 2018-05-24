@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #include "hashmap.c"
 
@@ -99,21 +100,13 @@ typedef struct{
 
 /**
  * Compare the Manhattan scores of two moves
- * @param a_    move 1
- * @param b_    move 2
- * @return to   comparison between the two scores
+ * @param a    move 1
+ * @param b    move 2
+ * @return to  comparison between the two scores
  */
-int cmpManhattanDistances(const void *a_, const void *b_)
+int cmpManhattanDistances(const void *a, const void *b)
 {
-    const move *a = a_, *b = b_;
-
-    if(a->manhattanDistance == b->manhattanDistance)
-        return 0;
-    else if (a->manhattanDistance > b->manhattanDistance)
-        return -1;
-    else
-        return 1;
-
+    return ((move*)a)->manhattanDistance - ((move*)b)->manhattanDistance;
 }
 
 /**
@@ -144,8 +137,9 @@ int solve_dfs(const int board[], struct hashmap *explored, int depth) {
     directions[3].pos = pos + BOARD_SIDE;
 
     // compute Manhattan distances
+
     for(int i = 0; i < 4; i++){
-        directions[i].manhattanDistance = manhattanDistanceWithSwap(board, BOARD_LENGTH, BOARD_SIDE, directions[i].pos);
+        directions[i].manhattanDistance = directions[i].pos > 0 && directions[i].pos < BOARD_LENGTH ? manhattanDistanceWithSwap(board, BOARD_LENGTH, BOARD_SIDE, directions[i].pos) : INT_MAX;
     }
 
     // sort by manhattan distance
