@@ -10,7 +10,7 @@
 #define MAX_DEPTH 50
 #define COLOR 0
 
-int best_depth = MAX_INT;
+int best_depth = INT_MAX;
 
 /**
  * Print the square board
