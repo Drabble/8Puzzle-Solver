@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #include "hashmap.c"
 
@@ -8,6 +9,8 @@
 #define BOARD_LENGTH BOARD_SIDE * BOARD_SIDE
 #define MAX_DEPTH 50
 #define COLOR 0
+
+int best_depth = MAX_INT;
 
 /**
  * Print the square board
@@ -129,7 +132,7 @@ int solve_dfs(const int board[], struct hashmap *explored, int depth) {
         return 1;
     }
     
-    if (depth > MAX_DEPTH)
+    if (depth >= MAX_DEPTH || depth >= best_depth)
         return 0;
 
     // calculate position of the 0 (empty cell)
@@ -166,6 +169,7 @@ int solve_dfs(const int board[], struct hashmap *explored, int depth) {
                 // if a possible solution is found
                 if (solve_dfs(new_board, explored, depth + 1))
                 {
+                    best_depth = depth;
                     print_board(new_board, BOARD_SIDE);
                     free(new_board);
                     return 1;
