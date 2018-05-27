@@ -2,15 +2,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <math.h>
+#include <time.h>
 
 #include "hashmap.c"
 
 #define BOARD_SIDE 3
 #define BOARD_LENGTH BOARD_SIDE * BOARD_SIDE
 #define MAX_DEPTH 50
-#define COLOR 0
+#define COLOR 1
 
-int best_depth = INT_MAX;
+int best_depth;
+long iter = 0;
 
 /**
  * Print the square board
@@ -48,7 +51,7 @@ int check_solved(const int *board, int size) {
     if (board[size - 1] != 0)
         return 0;
 
-    for (int i = 0; i < size - 2; ++i)
+    for (int i = 0; i <= size - 2; ++i)
         if (board[i] != i + 1)
             return 0;
 
@@ -68,6 +71,22 @@ void swap(const int *origin, int *dest, int size, int from, int to) {
     int temp = dest[to];
     dest[to] = dest[from];
     dest[from] = temp;
+}
+
+void shuffle(int *array, size_t n) {
+    srand(time(NULL));
+    if (n > 1) {
+        size_t i;
+        for (i = 1; i < n - 1; i++) {
+            size_t j = rand() % (i + 1);
+            if (j == 0)
+                j = 1;
+            int temp = array[j];
+            array[j] = array[i];
+            array[i] = temp;
+        }
+    }
+
 }
 
 /**
@@ -95,7 +114,62 @@ size_t manhattanDistanceWithSwap(const int board[], const size_t length, const s
     return total;
 }
 
+typedef enum direction direction;
+enum direction
+{
+    UP, DOWN, LEFT, RIGHT
+};
+
+typedef struct node
+{
+    int* board;
+    struct node *children[4];
+} node;
+
+node* tree_create(int* root_value) {
+    node * n = malloc(sizeof(node));
+    n->board = root_value;
+    return n;
+}
+
+node* tree_insert(node *parent, int *value, direction dir) {
+    node * n = malloc(sizeof(node));
+    n->board = value;
+    parent->children[dir] = n;
+
+    return n;
+}
+
+void tree_remove(node *parent, direction dir) {
+    free(parent->children[dir]);
+    parent->children[dir] = NULL;
+}
+
+void print_tree(node *root, int depth) {
+    if (root == NULL){
+        return;
+    }
+    printf("depth: %d\n", depth++);
+    print_board(root->board, BOARD_SIDE);
+    for (int i = 0; i < 4; ++i){
+        print_tree(root->children[i], depth);
+    }
+}
+
+void tree_free(node *root) {
+    if (root == NULL){
+        return;
+    }
+
+    for (int i = 0; i < 4; ++i){
+        tree_free(root->children[i]);
+        free(root->board);
+        free(root);
+    }
+}
+
 typedef struct{
+    direction dir;
     int pos;
     int manhattanDistance;
 } move;
@@ -118,9 +192,14 @@ int cmpManhattanDistances(const void *a, const void *b)
  * @param  depth the current depth of the recursion
  * @return       a boolean indicating if a solution is found (1 for found, 0 otherwise)
  */
-int solve_dfs(const int board[], struct hashmap *explored, int depth) {
+int solve_dfs(const int board[], struct hashmap *explored, node *tree, int depth) {
+    iter++;
+    if (iter % 1000 == 0)
+        printf("current depth: %d, best depth: %d, iterations: %ld\n", depth, best_depth, iter );
+
     if (check_solved(board, BOARD_LENGTH)){
-        printf("solved!\n");
+        best_depth = depth - 1;
+        printf("solved! Best depth: %d, iterations: %ld\n", best_depth, iter);
         return 1;
     }
     
@@ -134,10 +213,13 @@ int solve_dfs(const int board[], struct hashmap *explored, int depth) {
     // compute the different moves, -1 if not possible
     move directions[4];
     directions[0].pos = pos % BOARD_SIDE == 0 ? -1 : pos - 1;
+    directions[0].dir = LEFT;
     directions[1].pos = pos % BOARD_SIDE == BOARD_SIDE - 1 ? -1 : pos + 1;
+    directions[1].dir = RIGHT;
     directions[2].pos = pos - BOARD_SIDE;
+    directions[2].dir = UP;
     directions[3].pos = pos + BOARD_SIDE;
-
+    directions[3].dir = DOWN;
     // compute Manhattan distances
 
     for(int i = 0; i < 4; i++){
@@ -147,8 +229,11 @@ int solve_dfs(const int board[], struct hashmap *explored, int depth) {
     // sort by manhattan distance
     qsort(directions, 4, sizeof(move), cmpManhattanDistances);
 
-
+    int found = 0;
     for (int i = 0; i < 4; i++) {
+        if (depth >= best_depth)
+            return found;
+
         int direction = directions[i].pos;
         if (direction >= 0 && direction < BOARD_LENGTH) {
             int* new_board = malloc(BOARD_LENGTH * sizeof(int));
@@ -156,45 +241,53 @@ int solve_dfs(const int board[], struct hashmap *explored, int depth) {
             // swap the 0 with a possible index
             swap(board, new_board, BOARD_LENGTH, pos, direction);
 
+
             // if this configuration is not yet explored
             if (hashmap_set(explored, new_board))
             {
+                node* new_node = tree_insert(tree, new_board, directions[i].dir);
                 // if a possible solution is found
-                if (solve_dfs(new_board, explored, depth + 1))
+                if (solve_dfs(new_board, explored, new_node, depth + 1))
                 {
-                    best_depth = depth;
-                    print_board(new_board, BOARD_SIDE);
-                    free(new_board);
-                    return 1;
+                    //printf("depth = %d\n", depth);
+                    //print_board(new_board, BOARD_SIDE);
+                    found = found || 1;
+                }
+                else{
+                    tree_remove(tree, directions[i].dir);
                 }
             }
-            free(new_board);
+
         }
     }
 
-    return 0;
+
+    return found;
 }
 
 
 int main(int argc, char const *argv[])
 {
-    int board[] = { 1, 2, 0, 3, 4, 5, 6, 7, 8};
+    best_depth = INT_MAX;
+    //int board[] = { 1, 2, 3, 4, 0, 5, 7, 8, 6};
+    
+    int board[] = {0,4,3,5,7,1,8,2,6 };
+    //int board[] = {0,1,3,4,2,5,7,8,6};
     //int board[] = { 0, 5, 3, 4, 2, 7, 6, 8, 1};
     //int board[] = { 5,6,7,4,0,8,3,2,1};
     //int board[] = { 1,3,4,8,6,2,7,0,5};
     //int board[] = {1,2,3,8,0,4,7,6,5};
+   // shuffle(board, (size_t) BOARD_LENGTH);
+    print_board(board, BOARD_SIDE);
 
     struct hashmap *explored;
+    node* tree = tree_create(board);
     explored = hashmap_create(100000000, BOARD_LENGTH); // TODO: Trouver une bonne taille pour la hashmap
 
+    solve_dfs(board, explored, tree, 0);
+    printf("end! best depth: %d, iterations: %ld\n", best_depth, iter );
 
-    if (solve_dfs(board, explored, 0))
-    {
-        printf("solution found\n");
-    } else {
-        printf("no solution found\n");
-    }
-
+    print_tree(tree, 0);
     hashmap_free(explored);
 
     return 0;
