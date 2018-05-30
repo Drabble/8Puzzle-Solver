@@ -9,11 +9,29 @@
 
 #define BOARD_SIDE 3
 #define BOARD_LENGTH BOARD_SIDE * BOARD_SIDE
-#define MAX_DEPTH 50
+#define MAX_DEPTH 20
 #define COLOR 1
+#define DEBUG 0
 
+int max_depth;
 int best_depth;
 long iter = 0;
+
+typedef struct stack
+{
+    int size;
+    int last; 
+    int *values;
+} stack;
+
+stack* create_stack(int size)
+{
+    stack *s = malloc(sizeof(stack));
+    s->last = 0;
+    s->values = malloc(size * sizeof(int));
+
+    return s;
+}
 
 /**
  * Print the square board
@@ -73,6 +91,12 @@ void swap(const int *origin, int *dest, int size, int from, int to) {
     dest[from] = temp;
 }
 
+
+/**
+ * Shuffle an array radomly with a 0 at (0,0)
+ * @param array a pointer to the board to shuffle
+ * @param n     the size of the array
+ */
 void shuffle(int *array, size_t n) {
     srand(time(NULL));
     if (n > 1) {
@@ -120,54 +144,6 @@ enum direction
     UP, DOWN, LEFT, RIGHT
 };
 
-typedef struct node
-{
-    int* board;
-    struct node *children[4];
-} node;
-
-node* tree_create(int* root_value) {
-    node * n = malloc(sizeof(node));
-    n->board = root_value;
-    return n;
-}
-
-node* tree_insert(node *parent, int *value, direction dir) {
-    node * n = malloc(sizeof(node));
-    n->board = value;
-    parent->children[dir] = n;
-
-    return n;
-}
-
-void tree_remove(node *parent, direction dir) {
-    free(parent->children[dir]);
-    parent->children[dir] = NULL;
-}
-
-void print_tree(node *root, int depth) {
-    if (root == NULL){
-        return;
-    }
-    printf("depth: %d\n", depth++);
-    print_board(root->board, BOARD_SIDE);
-    for (int i = 0; i < 4; ++i){
-        print_tree(root->children[i], depth);
-    }
-}
-
-void tree_free(node *root) {
-    if (root == NULL){
-        return;
-    }
-
-    for (int i = 0; i < 4; ++i){
-        tree_free(root->children[i]);
-        free(root->board);
-        free(root);
-    }
-}
-
 typedef struct{
     direction dir;
     int pos;
@@ -192,18 +168,19 @@ int cmpManhattanDistances(const void *a, const void *b)
  * @param  depth the current depth of the recursion
  * @return       a boolean indicating if a solution is found (1 for found, 0 otherwise)
  */
-int solve_dfs(const int board[], struct hashmap *explored, node *tree, int depth) {
+int solve_dfs(const int board[], int depth) {
     iter++;
-    if (iter % 1000 == 0)
+    if (iter % 1000 == 0 && DEBUG)
         printf("current depth: %d, best depth: %d, iterations: %ld\n", depth, best_depth, iter );
 
     if (check_solved(board, BOARD_LENGTH)){
-        best_depth = depth - 1;
+        best_depth = depth -1;
         printf("solved! Best depth: %d, iterations: %ld\n", best_depth, iter);
+        //print_board(board, BOARD_SIDE);
         return 1;
     }
     
-    if (depth >= MAX_DEPTH || depth >= best_depth)
+    if (depth >= max_depth || depth >= best_depth)
         return 0;
 
     // calculate position of the 0 (empty cell)
@@ -241,54 +218,66 @@ int solve_dfs(const int board[], struct hashmap *explored, node *tree, int depth
             // swap the 0 with a possible index
             swap(board, new_board, BOARD_LENGTH, pos, direction);
 
-
-            // if this configuration is not yet explored
-            if (hashmap_set(explored, new_board))
-            {
-                node* new_node = tree_insert(tree, new_board, directions[i].dir);
-                // if a possible solution is found
-                if (solve_dfs(new_board, explored, new_node, depth + 1))
-                {
-                    //printf("depth = %d\n", depth);
-                    //print_board(new_board, BOARD_SIDE);
-                    found = found || 1;
-                }
-                else{
-                    tree_remove(tree, directions[i].dir);
-                }
-            }
-
+            found = solve_dfs(new_board, depth + 1) || found;
+            free(new_board);
         }
     }
 
-
     return found;
+}
+
+
+/**
+ * Parse a string of numbers into a usable grid.
+ * @param board  the array to fill
+ * @param string the string to convertinto a board
+ */
+void parse_board(int* board, const char* string)
+{
+    int length = strlen(string);
+    int i;
+
+    for (i = 0; i < length; i++){
+        board[i] = string[i] - '0';
+    }
 }
 
 
 int main(int argc, char const *argv[])
 {
     best_depth = INT_MAX;
-    //int board[] = { 1, 2, 3, 4, 0, 5, 7, 8, 6};
+
+    if (argc >= 2)
+        max_depth = atoi(argv[1]);
+    else
+        max_depth = MAX_DEPTH;
+
+
+    int board[] = { 0,1,2,3,4,5,6,7,8};
+    if (argc >= 3){
+        if (strlen(argv[2]) != 9){
+            printf("The given board is incorrect!\n");
+            exit(-1);
+        }
+        parse_board(board, argv[2]);
+    }else{
+        shuffle(board, (size_t) BOARD_LENGTH);
+    }
+
+    stack *s = create_stack(max_depth);
+    //int board[] = { 1, 2, 3, 4, 5, 7,0, 8, 6};
     
-    int board[] = {0,4,3,5,7,1,8,2,6 };
+    //int board[] = {0,4,3,5,7,1,8,2,6 };
     //int board[] = {0,1,3,4,2,5,7,8,6};
     //int board[] = { 0, 5, 3, 4, 2, 7, 6, 8, 1};
     //int board[] = { 5,6,7,4,0,8,3,2,1};
     //int board[] = { 1,3,4,8,6,2,7,0,5};
     //int board[] = {1,2,3,8,0,4,7,6,5};
-   // shuffle(board, (size_t) BOARD_LENGTH);
+    //shuffle(board, (size_t) BOARD_LENGTH);
     print_board(board, BOARD_SIDE);
 
-    struct hashmap *explored;
-    node* tree = tree_create(board);
-    explored = hashmap_create(100000000, BOARD_LENGTH); // TODO: Trouver une bonne taille pour la hashmap
-
-    solve_dfs(board, explored, tree, 0);
+    solve_dfs(board,  0);
     printf("end! best depth: %d, iterations: %ld\n", best_depth, iter );
-
-    print_tree(tree, 0);
-    hashmap_free(explored);
 
     return 0;
 }
