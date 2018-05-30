@@ -59,7 +59,8 @@ int hashmap_set_if_lower(hashmap *hm, int *key, int value) {
     }
 
     item = malloc(sizeof(hashmap_item));
-    item->key = key;
+    item->key = malloc(hm->keySize * sizeof(int));
+    memcpy(item->key, key, hm->keySize * sizeof(int));
     item->value = value;
     item->next = hm->buckets[index];
     hm->buckets[index] = item;
