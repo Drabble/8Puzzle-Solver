@@ -162,11 +162,9 @@ int solve_dfs(const int board[], int depth, stack* s) {
 
     if (check_solved(board, BOARD_LENGTH)){
         best_depth = depth-1;
-        best_moves = malloc(depth * sizeof(int));
 
-        for(int i = 0; i < s->next; i++){
-            best_moves[i] = s->values[i];
-        }
+        memset(best_moves, -1, max_depth);
+        stack_dump(s, best_moves);
 
         printf("solved! Best depth: %d, iterations: %ld\n", best_depth, iter);
         //print_board(board, BOARD_SIDE);
@@ -216,7 +214,7 @@ int solve_dfs(const int board[], int depth, stack* s) {
             found = solve_dfs(new_board, depth + 1, s) || found;
             free(new_board);
 
-            stack_pull(s);
+            stack_pop(s);
         }
     }
 
@@ -249,7 +247,6 @@ int main(int argc, char const *argv[])
     else
         max_depth = MAX_DEPTH;
 
-
     int board[] = {0,1,2,3,4,5,6,7,8};
     if (argc >= 3){
         if (strlen(argv[2]) != 9){
@@ -262,6 +259,8 @@ int main(int argc, char const *argv[])
     }
 
     stack *s = stack_create(max_depth);
+    best_moves = malloc(max_depth * sizeof(int));
+
     //int board[] = { 1, 2, 3, 4, 5, 7,0, 8, 6};
     
     //int board[] = {0,4,3,5,7,1,8,2,6 };
@@ -278,9 +277,10 @@ int main(int argc, char const *argv[])
 
     printf("end! best depth: %d, iterations: %ld\n", best_depth, iter );
 
+    char *dirs[] = {"UP", "DOWN", "LEFT", "RIGHT"};
     for(int i = 0; i < best_depth + 1; i++){
-        printf("%d", best_moves[i]);
+        printf("%s\n", dirs[best_moves[i]]);
     }
-
+    stack_free(s);
     return 0;
 }
