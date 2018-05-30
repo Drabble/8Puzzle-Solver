@@ -123,32 +123,20 @@ PCM/fast:
 	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/build
 .PHONY : PCM/fast
 
-main.o: main.c.o
-
+# target to build an object file
+main.o:
+	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/main.o
 .PHONY : main.o
 
-# target to build an object file
-main.c.o:
-	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/main.c.o
-.PHONY : main.c.o
-
-main.i: main.c.i
-
+# target to preprocess a source file
+main.i:
+	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/main.i
 .PHONY : main.i
 
-# target to preprocess a source file
-main.c.i:
-	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/main.c.i
-.PHONY : main.c.i
-
-main.s: main.c.s
-
-.PHONY : main.s
-
 # target to generate assembly for a file
-main.c.s:
-	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/main.c.s
-.PHONY : main.c.s
+main.s:
+	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/main.s
+.PHONY : main.s
 
 # Help Target
 help:
