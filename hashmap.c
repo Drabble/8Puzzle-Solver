@@ -3,16 +3,17 @@
 #include <stddef.h>
 #include <math.h>
 
-struct hashmap_item {
+typedef struct hashmap_item {
     struct hashmap_item *next;
     int *key;
-};
+    int value;
+} hashmap_item;
 
-struct hashmap {
+typedef struct hashmap {
     struct hashmap_item **buckets;
     size_t keySize;
     size_t size;
-};
+} hashmap;
 
 static int hash(const int *key, int keySize, int size) {
     int hash = 17;
@@ -25,9 +26,9 @@ static int hash(const int *key, int keySize, int size) {
     return hash % size;
 }
 
-struct hashmap *hashmap_create(size_t size, size_t keySize) {
-    struct hashmap *hm = malloc(sizeof(struct hashmap));
-    hm->buckets = calloc(size, sizeof(struct hashmap_item *));
+hashmap *hashmap_create(size_t size, size_t keySize) {
+    hashmap *hm = malloc(sizeof(hashmap));
+    hm->buckets = calloc(size, sizeof(hashmap_item *));
     hm->keySize = keySize;
     hm->size = size;
     return hm;
@@ -43,32 +44,40 @@ int compare_key(const int *key1, const int *key2, int keySize) {
     return 1;
 }
 
-int hashmap_set(struct hashmap *hm, int *key) {
-    struct hashmap_item *item;
+int hashmap_set_if_lower(hashmap *hm, int *key, int value) {
+    hashmap_item *item;
     int index = hash(key, hm->keySize, hm->size);
 
     for (item = hm->buckets[index]; item != NULL; item = item->next) {
         if (compare_key(item->key, key, hm->keySize) == 1) {/* key already exists */
-            return 0;
+            free(key);
+            if(item->value < value){ // Lower value, don't replace
+                return 0;
+            } else{
+                item->value = value;
+                return 1;
+            }
         }
     }
 
-    item = malloc(sizeof(struct hashmap_item));
+    item = malloc(sizeof(hashmap_item));
     item->key = key;
+    item->value = value;
     item->next = hm->buckets[index];
     hm->buckets[index] = item;
 
     return 1;
 }
 
-void hashmap_free(struct hashmap *hm) {
-    struct hashmap_item *item;
-    struct hashmap_item *next;
+void hashmap_free(hashmap *hm) {
+    hashmap_item *item;
+    hashmap_item *next;
 
     int i;
     for (i = 0; i < hm->size; i++) {
         for (item = hm->buckets[i]; item != NULL;) {
             next = item->next;
+            free(item->key);
             free(item);
             item = next;
         }

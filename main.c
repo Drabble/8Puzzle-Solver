@@ -18,6 +18,8 @@ int max_depth;
 int best_depth;
 int* best_moves;
 long iter = 0;
+stack *s;
+hashmap *h;
 
 
 /**
@@ -155,7 +157,7 @@ int cmpManhattanDistances(const void *a, const void *b)
  * @param  depth the current depth of the recursion
  * @return       a boolean indicating if a solution is found (1 for found, 0 otherwise)
  */
-int solve_dfs(const int board[], int depth, stack* s) {
+int solve_dfs(const int board[], int depth) {
     iter++;
     if (iter % 1000 == 0 && DEBUG)
         printf("current depth: %d, best depth: %d, iterations: %ld\n", depth, best_depth, iter );
@@ -213,8 +215,9 @@ int solve_dfs(const int board[], int depth, stack* s) {
             // swap the 0 with a possible index
             swap(board, new_board, BOARD_LENGTH, pos, direction);
 
-            found = solve_dfs(new_board, depth + 1, s) || found;
-            free(new_board);
+            if(hashmap_set_if_lower(h, new_board, depth)){
+                found = solve_dfs(new_board, depth + 1) || found;
+            }
 
             stack_pull(s);
         }
@@ -244,6 +247,9 @@ int main(int argc, char const *argv[])
 {
     best_depth = INT_MAX;
 
+    s = stack_create(max_depth);
+    h = hashmap_create(1000, BOARD_LENGTH);
+
     if (argc >= 2)
         max_depth = atoi(argv[1]);
     else
@@ -261,7 +267,6 @@ int main(int argc, char const *argv[])
         shuffle(board, (size_t) BOARD_LENGTH);
     }
 
-    stack *s = stack_create(max_depth);
     //int board[] = { 1, 2, 3, 4, 5, 7,0, 8, 6};
     
     //int board[] = {0,4,3,5,7,1,8,2,6 };
@@ -275,16 +280,21 @@ int main(int argc, char const *argv[])
     print_board(board, BOARD_SIDE);
 
     long t = clock();
-    solve_dfs(board, 0, s);
+    solve_dfs(board, 0);
     t = clock() - t;
     double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
 
     printf("Took %f seconds to execute \n", time_taken);
 
-    printf("end! best depth: %d, iterations: %ld\n", best_depth, iter );
-
-    for(int i = 0; i < best_depth + 1; i++){
-        printf("%d", best_moves[i]);
+    if(best_moves != NULL){
+        printf("end! best depth: %d, iterations: %ld\n", best_depth, iter);
+        printf("The path to follow is the following: ");
+        for(int i = 0; i < best_depth + 1; i++){
+            printf("%d", best_moves[i]);
+        }
+        printf("\n");
+    } else{
+        printf("No solution found\n");
     }
 
     return 0;

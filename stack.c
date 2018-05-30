@@ -5,7 +5,6 @@
 
 typedef struct stack
 {
-    int size;
     int next;
     int *values;
 } stack;
@@ -24,7 +23,7 @@ void stack_push(stack* s, int v){
     s->next++;
 }
 
-void stack_pull(stack* s){
+int stack_pull(stack* s){
     s->next--;
     return s->next;
 }
