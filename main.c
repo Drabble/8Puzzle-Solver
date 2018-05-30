@@ -273,7 +273,12 @@ int main(int argc, char const *argv[])
 
     print_board(board, BOARD_SIDE);
 
+    long t = clock();
     solve_dfs(board, 0, s);
+    t = clock() - t;
+    double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+
+    printf("Took %f seconds to execute \n", time_taken);
 
     printf("end! best depth: %d, iterations: %ld\n", best_depth, iter );
 
