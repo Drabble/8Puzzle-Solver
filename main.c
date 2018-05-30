@@ -213,10 +213,10 @@ int solve_dfs(const int board[], int depth) {
             // swap the 0 with a possible index
             swap(board, new_board, BOARD_LENGTH, pos, direction);
 
-            //if(hashmap_set_if_lower(h, new_board, depth)){
+            if(hashmap_set_if_lower(h, new_board, depth)){
                 found = solve_dfs(new_board, depth + 1) || found;
-            //}
-
+            }
+            free(new_board);
             stack_pop(s);
         }
     }
@@ -244,8 +244,6 @@ void parse_board(int* board, const char* string)
 int main(int argc, char const *argv[])
 {
     best_depth = INT_MAX;
-
-
 
     if (argc >= 2)
         max_depth = atoi(argv[1]);

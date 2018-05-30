@@ -32,20 +32,18 @@ int stack_is_empty(stack *s)
 }
 
 void stack_push(stack* s, int v){
-    if(stack_is_full(s)){
-        printf("Stack is full...");
+    if(stack_is_full(s))
         return;
-    }
+    
     s->values[s->next] = v;
     s->next++;
 }
 
 
 int stack_pop(stack* s){
-    if(stack_is_empty(s)){
-        printf("Stack is empty...");
+    if(stack_is_empty(s))
         return -1;
-    }
+    
     s->next--;
     return s->next;
 }

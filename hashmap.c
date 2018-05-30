@@ -49,7 +49,6 @@ int hashmap_set_if_lower(hashmap *hm, int *key, int value) {
 
     for (item = hm->buckets[index]; item != NULL; item = item->next) {
         if (compare_key(item->key, key, hm->keySize) == 1) {/* key already exists */
-            free(key);
             if(item->value <= value){ // Lower value, don't replace
                 return 0;
             } else{
