@@ -35,8 +35,7 @@ hashmap *hashmap_create(size_t size, size_t keySize) {
 }
 
 int compare_key(const int *key1, const int *key2, int keySize) {
-    int i;
-    for (i = 0; i < keySize; i++) {
+    for (int i = 0; i < keySize; i++) {
         if (key1[i] != key2[i]) {
             return 0;
         }
@@ -51,7 +50,7 @@ int hashmap_set_if_lower(hashmap *hm, int *key, int value) {
     for (item = hm->buckets[index]; item != NULL; item = item->next) {
         if (compare_key(item->key, key, hm->keySize) == 1) {/* key already exists */
             free(key);
-            if(item->value < value){ // Lower value, don't replace
+            if(item->value <= value){ // Lower value, don't replace
                 return 0;
             } else{
                 item->value = value;

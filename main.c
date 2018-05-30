@@ -213,9 +213,9 @@ int solve_dfs(const int board[], int depth) {
             // swap the 0 with a possible index
             swap(board, new_board, BOARD_LENGTH, pos, direction);
 
-            if(hashmap_set_if_lower(h, new_board, depth)){
+            //if(hashmap_set_if_lower(h, new_board, depth)){
                 found = solve_dfs(new_board, depth + 1) || found;
-            }
+            //}
 
             stack_pop(s);
         }
@@ -245,8 +245,7 @@ int main(int argc, char const *argv[])
 {
     best_depth = INT_MAX;
 
-    s = stack_create(max_depth);
-    h = hashmap_create(1000, BOARD_LENGTH);
+
 
     if (argc >= 2)
         max_depth = atoi(argv[1]);
@@ -264,8 +263,8 @@ int main(int argc, char const *argv[])
         shuffle(board, (size_t) BOARD_LENGTH);
     }
 
-
-    stack *s = stack_create(max_depth);
+    h = hashmap_create(1000, BOARD_LENGTH);
+    s = stack_create(max_depth);
     best_moves = malloc(max_depth * sizeof(int));
 
     //int board[] = { 1, 2, 3, 4, 5, 7,0, 8, 6};
