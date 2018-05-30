@@ -6,6 +6,7 @@
 #include <time.h>
 
 #include "hashmap.c"
+#include "stack.c"
 
 #define BOARD_SIDE 3
 #define BOARD_LENGTH BOARD_SIDE * BOARD_SIDE
@@ -15,23 +16,9 @@
 
 int max_depth;
 int best_depth;
+int* best_moves;
 long iter = 0;
 
-typedef struct stack
-{
-    int size;
-    int last; 
-    int *values;
-} stack;
-
-stack* create_stack(int size)
-{
-    stack *s = malloc(sizeof(stack));
-    s->last = 0;
-    s->values = malloc(size * sizeof(int));
-
-    return s;
-}
 
 /**
  * Print the square board
@@ -168,13 +155,19 @@ int cmpManhattanDistances(const void *a, const void *b)
  * @param  depth the current depth of the recursion
  * @return       a boolean indicating if a solution is found (1 for found, 0 otherwise)
  */
-int solve_dfs(const int board[], int depth) {
+int solve_dfs(const int board[], int depth, stack* s) {
     iter++;
     if (iter % 1000 == 0 && DEBUG)
         printf("current depth: %d, best depth: %d, iterations: %ld\n", depth, best_depth, iter );
 
     if (check_solved(board, BOARD_LENGTH)){
-        best_depth = depth -1;
+        best_depth = depth-1;
+        best_moves = malloc(depth * sizeof(int));
+
+        for(int i = 0; i < s->next; i++){
+            best_moves[i] = s->values[i];
+        }
+
         printf("solved! Best depth: %d, iterations: %ld\n", best_depth, iter);
         //print_board(board, BOARD_SIDE);
         return 1;
@@ -197,8 +190,8 @@ int solve_dfs(const int board[], int depth) {
     directions[2].dir = UP;
     directions[3].pos = pos + BOARD_SIDE;
     directions[3].dir = DOWN;
-    // compute Manhattan distances
 
+    // compute Manhattan distances
     for(int i = 0; i < 4; i++){
         directions[i].manhattanDistance = directions[i].pos > 0 && directions[i].pos < BOARD_LENGTH ? manhattanDistanceWithSwap(board, BOARD_LENGTH, BOARD_SIDE, directions[i].pos) : INT_MAX;
     }
@@ -215,11 +208,15 @@ int solve_dfs(const int board[], int depth) {
         if (direction >= 0 && direction < BOARD_LENGTH) {
             int* new_board = malloc(BOARD_LENGTH * sizeof(int));
 
+            stack_push(s, directions[i].dir);
+
             // swap the 0 with a possible index
             swap(board, new_board, BOARD_LENGTH, pos, direction);
 
-            found = solve_dfs(new_board, depth + 1) || found;
+            found = solve_dfs(new_board, depth + 1, s) || found;
             free(new_board);
+
+            stack_pull(s);
         }
     }
 
@@ -253,7 +250,7 @@ int main(int argc, char const *argv[])
         max_depth = MAX_DEPTH;
 
 
-    int board[] = { 0,1,2,3,4,5,6,7,8};
+    int board[] = {0,1,2,3,4,5,6,7,8};
     if (argc >= 3){
         if (strlen(argv[2]) != 9){
             printf("The given board is incorrect!\n");
@@ -264,7 +261,7 @@ int main(int argc, char const *argv[])
         shuffle(board, (size_t) BOARD_LENGTH);
     }
 
-    stack *s = create_stack(max_depth);
+    stack *s = stack_create(max_depth);
     //int board[] = { 1, 2, 3, 4, 5, 7,0, 8, 6};
     
     //int board[] = {0,4,3,5,7,1,8,2,6 };
@@ -274,10 +271,16 @@ int main(int argc, char const *argv[])
     //int board[] = { 1,3,4,8,6,2,7,0,5};
     //int board[] = {1,2,3,8,0,4,7,6,5};
     //shuffle(board, (size_t) BOARD_LENGTH);
+
     print_board(board, BOARD_SIDE);
 
-    solve_dfs(board,  0);
+    solve_dfs(board, 0, s);
+
     printf("end! best depth: %d, iterations: %ld\n", best_depth, iter );
+
+    for(int i = 0; i < best_depth + 1; i++){
+        printf("%d", best_moves[i]);
+    }
 
     return 0;
 }
