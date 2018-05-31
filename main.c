@@ -41,7 +41,6 @@ void print_board(const int *board, int size) {
         }
         printf("\n");
     }
-    printf("---\n");
 }
 
 
@@ -169,7 +168,7 @@ int solve_dfs(const int board[], int depth) {
 
         solution_found = 1;
 
-        printf("solved! Best depth: %d, iterations: %ld\n", best_depth, iter);
+        if(DEBUG)printf("solved! Best depth: %d, iterations: %ld\n", best_depth, iter);
         //print_board(board, BOARD_SIDE);
         return 1;
     }
@@ -296,7 +295,7 @@ int main(int argc, char const *argv[]) {
         printf("Solution found!\nbest depth:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f\npath:\n\n", best_depth, max_depth, iter, time_taken);
         char *dirs[] = {"UP", "DOWN", "LEFT", "RIGHT"};
         for(int i = 0; i < best_depth + 1; i++){
-            printf("  %d. %s\n",i, dirs[best_moves[i]]);
+            printf("  %3d. %s\n",i, dirs[best_moves[i]]);
         }
     } else {
         printf("No solution found.\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f", max_depth, iter, time_taken);
