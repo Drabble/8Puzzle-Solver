@@ -16,7 +16,8 @@
 
 int max_depth;
 int best_depth;
-int* best_moves;
+int *best_moves;
+int solution_found = 0;
 long iter = 0;
 stack *s;
 hashmap *h;
@@ -74,7 +75,7 @@ int check_solved(const int *board, int size) {
  * @param to     second element to swap
  */
 void swap(const int *origin, int *dest, int size, int from, int to) {
-    memcpy(dest, origin, size * sizeof(int));    
+    memcpy(dest, origin, size * sizeof(int));
     int temp = dest[to];
     dest[to] = dest[from];
     dest[from] = temp;
@@ -110,17 +111,17 @@ void shuffle(int *array, size_t n) {
  * @param direction element to swap with the cell 0
  * @return          Manhattan score
  */
-size_t manhattanDistanceWithSwap(const int board[], const size_t length, const size_t side, int direction){
+size_t manhattanDistanceWithSwap(const int board[], const size_t length, const size_t side, int direction) {
     size_t total = 0;
     size_t i;
-    for(i = 0; i < length; i++){
+    for (i = 0; i < length; i++) {
         int xi = i % side;
         int yi = i / side;
-        if(board[i] == 0){
+        if (board[i] == 0) {
             total += abs(xi - board[direction] % side) + abs(yi - board[direction] / side);
-        } else if(i == direction){
+        } else if (i == direction) {
             total += abs(xi - 0) + abs(yi - 0);
-        } else{
+        } else {
             total += abs(xi - board[i] % side) + abs(yi - board[i] / side);
         }
     }
@@ -128,12 +129,11 @@ size_t manhattanDistanceWithSwap(const int board[], const size_t length, const s
 }
 
 typedef enum direction direction;
-enum direction
-{
+enum direction {
     UP, DOWN, LEFT, RIGHT
 };
 
-typedef struct{
+typedef struct {
     direction dir;
     int pos;
     int manhattanDistance;
@@ -145,9 +145,8 @@ typedef struct{
  * @param b    move 2
  * @return to  comparison between the two scores
  */
-int cmpManhattanDistances(const void *a, const void *b)
-{
-    return ((move*)a)->manhattanDistance - ((move*)b)->manhattanDistance;
+int cmpManhattanDistances(const void *a, const void *b) {
+    return ((move *) a)->manhattanDistance - ((move *) b)->manhattanDistance;
 }
 
 /**
@@ -160,19 +159,21 @@ int cmpManhattanDistances(const void *a, const void *b)
 int solve_dfs(const int board[], int depth) {
     iter++;
     if (iter % 1000 == 0 && DEBUG)
-        printf("current depth: %d, best depth: %d, iterations: %ld\n", depth, best_depth, iter );
+        printf("current depth: %d, best depth: %d, iterations: %ld\n", depth, best_depth, iter);
 
-    if (check_solved(board, BOARD_LENGTH)){
-        best_depth = depth-1;
+    if (check_solved(board, BOARD_LENGTH)) {
+        best_depth = depth - 1;
 
         memset(best_moves, -1, max_depth);
         stack_dump(s, best_moves);
+
+        solution_found = 1;
 
         printf("solved! Best depth: %d, iterations: %ld\n", best_depth, iter);
         //print_board(board, BOARD_SIDE);
         return 1;
     }
-    
+
     if (depth >= max_depth || depth >= best_depth)
         return 0;
 
@@ -192,8 +193,13 @@ int solve_dfs(const int board[], int depth) {
     directions[3].dir = DOWN;
 
     // compute Manhattan distances
-    for(int i = 0; i < 4; i++){
-        directions[i].manhattanDistance = directions[i].pos > 0 && directions[i].pos < BOARD_LENGTH ? manhattanDistanceWithSwap(board, BOARD_LENGTH, BOARD_SIDE, directions[i].pos) : INT_MAX;
+    for (int i = 0; i < 4; i++) {
+        directions[i].manhattanDistance =
+                directions[i].pos > 0 && directions[i].pos < BOARD_LENGTH ? manhattanDistanceWithSwap(board,
+                                                                                                      BOARD_LENGTH,
+                                                                                                      BOARD_SIDE,
+                                                                                                      directions[i].pos)
+                                                                          : INT_MAX;
     }
 
     // sort by manhattan distance
@@ -206,14 +212,15 @@ int solve_dfs(const int board[], int depth) {
 
         int direction = directions[i].pos;
         if (direction >= 0 && direction < BOARD_LENGTH) {
-            int* new_board = malloc(BOARD_LENGTH * sizeof(int));
+            int *new_board = malloc(BOARD_LENGTH * sizeof(int));
 
             stack_push(s, directions[i].dir);
 
             // swap the 0 with a possible index
             swap(board, new_board, BOARD_LENGTH, pos, direction);
 
-            if(hashmap_set_if_lower(h, new_board, depth)){
+            if (hashmap_set_if_lower(h, new_board, depth)) {
+                //#pragma omp task
                 found = solve_dfs(new_board, depth + 1) || found;
             }
             free(new_board);
@@ -230,19 +237,17 @@ int solve_dfs(const int board[], int depth) {
  * @param board  the array to fill
  * @param string the string to convertinto a board
  */
-void parse_board(int* board, const char* string)
-{
+void parse_board(int *board, const char *string) {
     int length = strlen(string);
     int i;
 
-    for (i = 0; i < length; i++){
+    for (i = 0; i < length; i++) {
         board[i] = string[i] - '0';
     }
 }
 
 
-int main(int argc, char const *argv[])
-{
+int main(int argc, char const *argv[]) {
     best_depth = INT_MAX;
 
     if (argc >= 2)
@@ -250,14 +255,14 @@ int main(int argc, char const *argv[])
     else
         max_depth = MAX_DEPTH;
 
-    int board[] = {0,1,2,3,4,5,6,7,8};
-    if (argc >= 3){
-        if (strlen(argv[2]) != 9){
+    int board[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+    if (argc >= 3) {
+        if (strlen(argv[2]) != 9) {
             printf("The given board is incorrect!\n");
             exit(-1);
         }
         parse_board(board, argv[2]);
-    }else{
+    } else {
         shuffle(board, (size_t) BOARD_LENGTH);
     }
 
@@ -266,7 +271,7 @@ int main(int argc, char const *argv[])
     best_moves = malloc(max_depth * sizeof(int));
 
     //int board[] = { 1, 2, 3, 4, 5, 7,0, 8, 6};
-    
+
     //int board[] = {0,4,3,5,7,1,8,2,6 };
     //int board[] = {0,1,3,4,2,5,7,8,6};
     //int board[] = { 0, 5, 3, 4, 2, 7, 6, 8, 1};
@@ -278,20 +283,23 @@ int main(int argc, char const *argv[])
     print_board(board, BOARD_SIDE);
 
     long t = clock();
-    solve_dfs(board, 0);
+    #pragma omp parallel num_threads(4)
+    {
+        #pragma omp single
+        solve_dfs(board, 0);
+    }
     t = clock() - t;
-    double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+    double time_taken = ((double) t) / CLOCKS_PER_SEC; // in seconds
 
-    if(best_moves != NULL){
-        printf("==================================\n");
+    printf("==================================\n");
+    if (solution_found) {
         printf("Solution found!\nbest depth:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f\npath:\n\n", best_depth, max_depth, iter, time_taken);
         char *dirs[] = {"UP", "DOWN", "LEFT", "RIGHT"};
         for(int i = 0; i < best_depth + 1; i++){
             printf("  %d. %s\n",i, dirs[best_moves[i]]);
         }
-    } else{
-        printf("=======================================================================\n");
-        printf("No solution found. iterations: %ld, time: %f", iter, time_taken);
+    } else {
+        printf("No solution found.\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f", max_depth, iter, time_taken);
     }
     stack_free(s);
     return 0;
