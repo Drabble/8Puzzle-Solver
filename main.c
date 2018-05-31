@@ -165,10 +165,14 @@ int cmp_manhattan_distances(const void *a, const void *b) {
  * @return       a boolean indicating if a solution is found (1 for found, 0 otherwise)
  */
 int solve_dfs(const int board[], int depth) {
+    #pragma omp atomic
     iter++;
     #pragma omp master
     if (iter % 1000 == 0 && DEBUG)
         printf("current depth: %d, best depth: %d, iterations: %ld\n", depth, best_depth, iter);
+
+    if (depth >= max_depth || depth >= best_depth)
+        return 0;
 
     if (check_solved(board, BOARD_LENGTH)) {
 
@@ -182,16 +186,13 @@ int solve_dfs(const int board[], int depth) {
             }
         }
 
-
         solution_found = 1;
 
         if(DEBUG)printf("solved! Best depth: %d, iterations: %ld\n", best_depth, iter);
-        //print_board(board, BOARD_SIDE);
+
         return 1;
     }
 
-    if (depth >= max_depth || depth >= best_depth)
-        return 0;
 
     // calculate position of the 0 (empty cell)
     int pos;
