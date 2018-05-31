@@ -171,10 +171,17 @@ int solve_dfs(const int board[], int depth) {
         printf("current depth: %d, best depth: %d, iterations: %ld\n", depth, best_depth, iter);
 
     if (check_solved(board, BOARD_LENGTH)) {
-        best_depth = depth - 1;
 
-        memset(best_moves, -1, max_depth);
-        stack_dump(s, best_moves);
+        #pragma omp critical
+        {
+            if(best_depth > depth - 1){
+                best_depth = depth - 1;
+
+                memset(best_moves, -1, max_depth);
+                stack_dump(s, best_moves);
+            }
+        }
+
 
         solution_found = 1;
 
@@ -232,7 +239,7 @@ int solve_dfs(const int board[], int depth) {
                 int res;
                 #pragma omp task shared(res) firstprivate(new_board)
                 {
-                    res = solve_dfs(new_board, depth + 1) ;
+                    res = solve_dfs(new_board, depth + 1);
                 }
                 #pragma omp taskwait
                 found = found || res;
