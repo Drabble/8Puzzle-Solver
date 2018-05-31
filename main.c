@@ -14,13 +14,32 @@
 #define COLOR 1
 #define DEBUG 0
 
-int max_depth;
-int best_depth;
-int *best_moves;
-int solution_found = 0;
-long iter = 0;
-stack *s;
-hashmap *h;
+int max_depth;      // maximum dpeth for the dfs algorithm
+int best_depth;     // the current depth where a solution has been found
+int *best_moves;    // the array containing the current best path
+int solution_found = 0; // boolean saying if a solution has been found
+long iter = 0;      // the iterations count
+stack *s;           // the stack containing the current path
+hashmap *h;         // the hashmap containing a board as key and the depth where it's 
+                    // been inserted
+
+
+/**
+ * Enumeration describing the possible directions
+ */
+typedef enum direction direction;
+enum direction {
+    UP, DOWN, LEFT, RIGHT
+};
+
+/**
+ * Type describing a move with its distance from the correct solution
+ */
+typedef struct {
+    direction dir;
+    int pos;
+    int manhattan_distance;
+} move;
 
 
 /**
@@ -110,7 +129,7 @@ void shuffle(int *array, size_t n) {
  * @param direction element to swap with the cell 0
  * @return          Manhattan score
  */
-size_t manhattanDistanceWithSwap(const int board[], const size_t length, const size_t side, int direction) {
+size_t manhattan_distance_with_swap(const int board[], const size_t length, const size_t side, int direction) {
     size_t total = 0;
     size_t i;
     for (i = 0; i < length; i++) {
@@ -127,25 +146,14 @@ size_t manhattanDistanceWithSwap(const int board[], const size_t length, const s
     return total;
 }
 
-typedef enum direction direction;
-enum direction {
-    UP, DOWN, LEFT, RIGHT
-};
-
-typedef struct {
-    direction dir;
-    int pos;
-    int manhattanDistance;
-} move;
-
 /**
  * Compare the Manhattan scores of two moves
  * @param a    move 1
  * @param b    move 2
  * @return to  comparison between the two scores
  */
-int cmpManhattanDistances(const void *a, const void *b) {
-    return ((move *) a)->manhattanDistance - ((move *) b)->manhattanDistance;
+int cmp_manhattan_distances(const void *a, const void *b) {
+    return ((move *) a)->manhattan_distance - ((move *) b)->manhattan_distance;
 }
 
 /**
@@ -193,8 +201,8 @@ int solve_dfs(const int board[], int depth) {
 
     // compute Manhattan distances
     for (int i = 0; i < 4; i++) {
-        directions[i].manhattanDistance =
-                directions[i].pos > 0 && directions[i].pos < BOARD_LENGTH ? manhattanDistanceWithSwap(board,
+        directions[i].manhattan_distance =
+                directions[i].pos > 0 && directions[i].pos < BOARD_LENGTH ? manhattan_distance_with_swap(board,
                                                                                                       BOARD_LENGTH,
                                                                                                       BOARD_SIDE,
                                                                                                       directions[i].pos)
@@ -202,7 +210,7 @@ int solve_dfs(const int board[], int depth) {
     }
 
     // sort by manhattan distance
-    qsort(directions, 4, sizeof(move), cmpManhattanDistances);
+    qsort(directions, 4, sizeof(move), cmp_manhattan_distances);
 
     int found = 0;
     for (int i = 0; i < 4; i++) {
@@ -249,11 +257,13 @@ void parse_board(int *board, const char *string) {
 int main(int argc, char const *argv[]) {
     best_depth = INT_MAX;
 
+    // parsing the max depth argument
     if (argc >= 2)
         max_depth = atoi(argv[1]);
     else
         max_depth = MAX_DEPTH;
 
+    // parsing the board argument
     int board[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
     if (argc >= 3) {
         if (strlen(argv[2]) != 9) {
@@ -269,24 +279,13 @@ int main(int argc, char const *argv[]) {
     s = stack_create(max_depth);
     best_moves = malloc(max_depth * sizeof(int));
 
-    //int board[] = { 1, 2, 3, 4, 5, 7,0, 8, 6};
-
-    //int board[] = {0,4,3,5,7,1,8,2,6 };
-    //int board[] = {0,1,3,4,2,5,7,8,6};
-    //int board[] = { 0, 5, 3, 4, 2, 7, 6, 8, 1};
-    //int board[] = { 5,6,7,4,0,8,3,2,1};
-    //int board[] = { 1,3,4,8,6,2,7,0,5};
-    //int board[] = {1,2,3,8,0,4,7,6,5};
-    //shuffle(board, (size_t) BOARD_LENGTH);
-
     print_board(board, BOARD_SIDE);
 
     long t = clock();
-    #pragma omp parallel num_threads(4)
-    {
-        #pragma omp single
-        solve_dfs(board, 0);
-    }
+    
+    // start the search    
+    solve_dfs(board, 0);
+    
     t = clock() - t;
     double time_taken = ((double) t) / CLOCKS_PER_SEC; // in seconds
 
