@@ -35,12 +35,14 @@ hashmap *hashmap_create(size_t size, size_t keySize) {
 }
 
 int compare_key(const int *key1, const int *key2, int keySize) {
+    int res = 1;
+    #pragma omp critical
     for (int i = 0; i < keySize; i++) {
         if (key1[i] != key2[i]) {
-            return 0;
+            res = 0;
         }
     }
-    return 1;
+    return res;
 }
 
 int hashmap_set_if_lower(hashmap *hm, int *key, int value) {
@@ -52,6 +54,7 @@ int hashmap_set_if_lower(hashmap *hm, int *key, int value) {
             if(item->value <= value){ // Lower value, don't replace
                 return 0;
             } else{
+                #pragma omp critical
                 item->value = value;
                 return 1;
             }
@@ -61,9 +64,12 @@ int hashmap_set_if_lower(hashmap *hm, int *key, int value) {
     item = malloc(sizeof(hashmap_item));
     item->key = malloc(hm->keySize * sizeof(int));
     memcpy(item->key, key, hm->keySize * sizeof(int));
-    item->value = value;
-    item->next = hm->buckets[index];
-    hm->buckets[index] = item;
+    #pragma omp critical
+    {
+        item->value = value;
+        item->next = hm->buckets[index];
+        hm->buckets[index] = item;
+    }
 
     return 1;
 }

@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <math.h>
 #include <time.h>
+#include <omp.h>
 
 #include "hashmap.c"
 #include "stack.c"
@@ -12,7 +13,7 @@
 #define BOARD_LENGTH BOARD_SIDE * BOARD_SIDE
 #define MAX_DEPTH 20
 #define COLOR 1
-#define DEBUG 0
+#define DEBUG 1
 
 int max_depth;      // maximum dpeth for the dfs algorithm
 int best_depth;     // the current depth where a solution has been found
@@ -165,6 +166,7 @@ int cmp_manhattan_distances(const void *a, const void *b) {
  */
 int solve_dfs(const int board[], int depth) {
     iter++;
+    #pragma omp master
     if (iter % 1000 == 0 && DEBUG)
         printf("current depth: %d, best depth: %d, iterations: %ld\n", depth, best_depth, iter);
 
@@ -227,8 +229,13 @@ int solve_dfs(const int board[], int depth) {
             swap(board, new_board, BOARD_LENGTH, pos, direction);
 
             if (hashmap_set_if_lower(h, new_board, depth)) {
-                //#pragma omp task
-                found = solve_dfs(new_board, depth + 1) || found;
+                int res;
+                #pragma omp task shared(res) firstprivate(new_board)
+                {
+                    res = solve_dfs(new_board, depth + 1) ;
+                }
+                #pragma omp taskwait
+                found = found || res;
             }
             free(new_board);
             stack_pop(s);
@@ -275,6 +282,12 @@ int main(int argc, char const *argv[]) {
         shuffle(board, (size_t) BOARD_LENGTH);
     }
 
+    int thread_count = omp_get_num_procs();
+    
+    // num of thread
+    if (argc >= 4) 
+        thread_count = atoi(argv[3]);
+
     h = hashmap_create(1000, BOARD_LENGTH);
     s = stack_create(max_depth);
     best_moves = malloc(max_depth * sizeof(int));
@@ -283,21 +296,26 @@ int main(int argc, char const *argv[]) {
 
     long t = clock();
     
-    // start the search    
-    solve_dfs(board, 0);
+    #pragma omp parallel num_threads(thread_count) firstprivate(board)
+    {
+        #pragma omp single
+        solve_dfs(board, 0);        // start the search    
+    }
     
     t = clock() - t;
     double time_taken = ((double) t) / CLOCKS_PER_SEC; // in seconds
 
     printf("==================================\n");
     if (solution_found) {
-        printf("Solution found!\nbest depth:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f\npath:\n\n", best_depth, max_depth, iter, time_taken);
+        printf("Solution found!\nthreads:\t%d\nbest depth:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f\npath:\n\n",
+            thread_count,best_depth, max_depth, iter, time_taken);
         char *dirs[] = {"UP", "DOWN", "LEFT", "RIGHT"};
         for(int i = 0; i < best_depth + 1; i++){
             printf("  %3d. %s\n",i, dirs[best_moves[i]]);
         }
     } else {
-        printf("No solution found.\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f", max_depth, iter, time_taken);
+        printf("No solution found.\nthreads:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f",
+            thread_count, max_depth, iter, time_taken);
     }
     stack_free(s);
     return 0;
