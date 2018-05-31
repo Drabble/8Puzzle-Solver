@@ -10,7 +10,8 @@ typedef struct hashmap_item {
 } hashmap_item;
 
 typedef struct hashmap {
-    struct hashmap_item **buckets;
+    hashmap_item **buckets;
+    omp_lock_t **locks;
     size_t keySize;
     size_t size;
 } hashmap;
@@ -29,6 +30,10 @@ static int hash(const int *key, int keySize, int size) {
 hashmap *hashmap_create(size_t size, size_t keySize) {
     hashmap *hm = malloc(sizeof(hashmap));
     hm->buckets = calloc(size, sizeof(hashmap_item *));
+    hm->locks = malloc(size * sizeof(omp_lock_t*));
+    for(int i = 0; i < size; i++){
+        omp_init_lock(&hm->locks[i]);
+    }
     hm->keySize = keySize;
     hm->size = size;
     return hm;
@@ -36,7 +41,6 @@ hashmap *hashmap_create(size_t size, size_t keySize) {
 
 int compare_key(const int *key1, const int *key2, int keySize) {
     int res = 1;
-    #pragma omp critical
     for (int i = 0; i < keySize; i++) {
         if (key1[i] != key2[i]) {
             res = 0;
@@ -54,8 +58,9 @@ int hashmap_set_if_lower(hashmap *hm, int *key, int value) {
             if(item->value <= value){ // Lower value, don't replace
                 return 0;
             } else{
-                #pragma omp critical
+                omp_set_lock(&hm->locks[index]);
                 item->value = value;
+                omp_unset_lock(&hm->locks[index]);
                 return 1;
             }
         }
@@ -64,12 +69,11 @@ int hashmap_set_if_lower(hashmap *hm, int *key, int value) {
     item = malloc(sizeof(hashmap_item));
     item->key = malloc(hm->keySize * sizeof(int));
     memcpy(item->key, key, hm->keySize * sizeof(int));
-    #pragma omp critical
-    {
+    omp_set_lock(&hm->locks[index]);
         item->value = value;
         item->next = hm->buckets[index];
         hm->buckets[index] = item;
-    }
+    omp_unset_lock(&hm->locks[index]);
 
     return 1;
 }
