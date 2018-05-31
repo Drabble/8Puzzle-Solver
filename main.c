@@ -282,17 +282,16 @@ int main(int argc, char const *argv[])
     t = clock() - t;
     double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
 
-    printf("Took %f seconds to execute \n", time_taken);
-
     if(best_moves != NULL){
-        printf("end! best depth: %d, iterations: %ld\n", best_depth, iter);
-        printf("The path to follow is the following: ");
+        printf("==================================\n");
+        printf("Solution found!\nbest depth:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f\npath:\n\n", best_depth, max_depth, iter, time_taken);
         char *dirs[] = {"UP", "DOWN", "LEFT", "RIGHT"};
         for(int i = 0; i < best_depth + 1; i++){
-            printf("%s\n", dirs[best_moves[i]]);
+            printf("  %d. %s\n",i, dirs[best_moves[i]]);
         }
     } else{
-        printf("No solution found\n");
+        printf("=======================================================================\n");
+        printf("No solution found. iterations: %ld, time: %f", iter, time_taken);
     }
     stack_free(s);
     return 0;
