@@ -2,92 +2,215 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <math.h>
+#include <limits.h>
+#include "hashmap.h"
 
-typedef struct hashmap_item {
-    struct hashmap_item *next;
-    int *key;
-    int value;
-} hashmap_item;
+#define MAX_LOAD 2
+#define KEY_SIZE 9
 
-typedef struct hashmap {
-    struct hashmap_item **buckets;
-    size_t keySize;
-    size_t size;
-} hashmap;
 
-static int hash(const int *key, int keySize, int size) {
+hashmap *hashmap_create()
+{
+    hashmap* new_hashmap = malloc(sizeof(hashmap));
+    new_hashmap->size = 2;
+
+    hashmap_initialize(new_hashmap);
+
+    return new_hashmap;
+}
+
+void hashmap_free(hashmap *hm)
+{
+    free(hm->primary_buckets);
+    free(hm);
+}
+
+int reverse(int value)
+{
+    int number = value;
+    int res = number & 0x1;
+    int s = sizeof(number) * CHAR_BIT - 1; 
+
+    for (number >>= 1; number; number >>= 1)
+    {   
+      res <<= 1;
+      res |= number & 0x1;
+      s--;
+    }
+    return res <<= s; // shift when v's highest bits are zero
+}
+
+int hash(int *key) {
     int hash = 17;
 
     int i;
-    for (i = 0; i < keySize; i++) {
+    for (i = 0; i < KEY_SIZE; i++) {
         hash += key[i] * pow(10, i);
     }
 
-    return hash % size;
+    return hash;
 }
 
-hashmap *hashmap_create(size_t size, size_t keySize) {
-    hashmap *hm = malloc(sizeof(hashmap));
-    hm->buckets = calloc(size, sizeof(hashmap_item *));
-    hm->keySize = keySize;
-    hm->size = size;
-    return hm;
-}
+int hashmap_initialize(hashmap* hm)
+{
+    hm->primary_buckets = (node ***) calloc(48, sizeof(node **));
+    if (hm->primary_buckets != NULL)
+    {
+        hm->primary_buckets[0] = (node **) calloc(hm->size, sizeof(node *));
+        if (hm->primary_buckets[0] != NULL)
+        {
+            hm->primary_buckets[0][0] = (node *) calloc(hm->size, sizeof(node));
+            if (hm->primary_buckets[0][0] != NULL)
+            {
+                hm->primary_buckets[0][0]->sentinel = 1;
+                hm->primary_buckets[0][0]->next = NULL;
 
-int compare_key(const int *key1, const int *key2, int keySize) {
-    int res = 1;
-    #pragma omp critical
-    for (int i = 0; i < keySize; i++) {
-        if (key1[i] != key2[i]) {
-            res = 0;
-        }
-    }
-    return res;
-}
-
-int hashmap_set_if_lower(hashmap *hm, int *key, int value) {
-    hashmap_item *item;
-    int index = hash(key, hm->keySize, hm->size);
-
-    for (item = hm->buckets[index]; item != NULL; item = item->next) {
-        if (compare_key(item->key, key, hm->keySize) == 1) {/* key already exists */
-            if(item->value <= value){ // Lower value, don't replace
-                return 0;
-            } else{
-                #pragma omp critical
-                item->value = value;
                 return 1;
+            }
+            free(hm->primary_buckets[0]);
+        }
+        free(hm->primary_buckets);
+    }
+    return 0;
+}
+
+node *get_secondary_bucket(hashmap* hm, int key)
+{
+    int i, min, max;
+    node **secondary, *sentinel;
+
+    for (i = min = 0, max = 2; key >= max; i += 1, max <<= 1)
+        min = max;
+
+    if (hm->primary_buckets[i] == NULL)
+    {
+        secondary = (node **)calloc(hm->size >> 1, sizeof(node *));
+        if(secondary == NULL) return NULL;
+
+        if(!__sync_bool_compare_and_swap(&hm->primary_buckets[i], NULL, secondary))
+            free(secondary);
+    }
+
+    if (hm->primary_buckets[i][key - min] == NULL)
+        if ((sentinel = hashmap_initialize_bucket(hm, key)) != NULL)
+            hm->primary_buckets[i][key - min] = sentinel;
+
+    return hm->primary_buckets[i][key - min];
+}
+
+int hashmap_list_insert(node *head, node *n)
+{
+    node *prev, *crt;
+
+    while(1)
+    {
+        if (hashmap_find(head, n->reversed_key, n->sentinel, &prev, &crt))
+            if (n->value >= crt->value)
+               return 0; 
+        
+        n->next = crt;
+
+        if(__sync_bool_compare_and_swap(&prev->next, crt, n))
+            return 1;
+    }
+}
+
+node *hashmap_initialize_bucket(hashmap* hm, int key)
+{
+    node *sentinel, *parent_bucket, *prev;
+    int parent = hm->size;
+    while((parent = parent >> 1) > key);
+
+    parent_bucket = get_secondary_bucket(hm, key - parent);
+    if ((sentinel = (node *)malloc(sizeof(node))) != NULL)
+    {
+        sentinel->sentinel = 1;
+        sentinel->reversed_key = key = reverse(key);
+        sentinel->next = NULL;
+        if(!hashmap_list_insert(parent_bucket, sentinel))
+        {
+            free(sentinel);
+            if (!hashmap_find(parent_bucket, key, 1, &prev, &sentinel))
+            {
+                return NULL;
             }
         }
     }
-
-    item = malloc(sizeof(hashmap_item));
-    item->key = malloc(hm->keySize * sizeof(int));
-    memcpy(item->key, key, hm->keySize * sizeof(int));
-    #pragma omp critical
-    {
-        item->value = value;
-        item->next = hm->buckets[index];
-        hm->buckets[index] = item;
-    }
-
-    return 1;
+    return sentinel;
 }
 
-void hashmap_free(hashmap *hm) {
-    hashmap_item *item;
-    hashmap_item *next;
 
-    int i;
-    for (i = 0; i < hm->size; i++) {
-        for (item = hm->buckets[i]; item != NULL;) {
-            next = item->next;
-            free(item->key);
-            free(item);
-            item = next;
-        }
+
+int hashmap_find(node *head, int reversed_key, int is_sentinel, node **prev, node **crt)
+{
+    conversion next;
+    while(1)
+    {
+        *prev = head;
+        *crt = (*prev)->next;
+        while(1)
+        {
+            if (*crt == NULL)
+                return 0;
+
+            next.n = (*crt)->next;
+            if (next.value & 0x1)
+            {
+                next.value ^= 0x1;
+                if(__sync_bool_compare_and_swap(&(*prev)->next, crt, next.n))
+                    *crt = next.n;
+                else 
+                    break;
+            }
+            else if((*crt)->reversed_key == reversed_key && is_sentinel == (*crt)->sentinel)
+                return 1;
+            else if((*crt)->reversed_key == reversed_key && is_sentinel)
+                return 0;
+            else if((*crt)->reversed_key > reversed_key)
+                return 0;
+            else{
+                *prev = *crt;
+                *crt  = next.n;
+            }
+        } 
+    }
+}
+
+int hashmap_insert(hashmap* hm, int* item, int value)
+{
+    node *bucket, *new_node;
+    int size, key;
+
+    if ((new_node = (node *)malloc(sizeof(node))) != NULL)
+    {
+        new_node->sentinel = 0;
+        key = hash(item);
+        new_node->reversed_key = reverse(key);
+        new_node->item = item;
+        new_node->value = value;
+
+        if ((bucket = get_secondary_bucket(hm, key % hm->size)) != NULL)
+            if (hashmap_list_insert(bucket, new_node))
+            {
+                size = hm->size;
+                if((__sync_fetch_and_add(&hm->item_count, 1) / size) >= MAX_LOAD)
+                    __sync_bool_compare_and_swap(&hm->size, size, size * 2);
+
+                return 1;
+            }
+        
+        free(new_node);
     }
 
-    free(hm->buckets);
-    free(hm);
+    return 0;
+}
+
+int hashmap_remove(int* key)
+{
+
+}
+
+int hashmap_contains(int* key)
+{
+
 }

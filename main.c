@@ -6,7 +6,7 @@
 #include <time.h>
 #include <omp.h>
 
-#include "hashmap.c"
+#include "hashmap.h"
 #include "stack.c"
 
 #define BOARD_SIDE 3
@@ -164,11 +164,10 @@ int cmp_manhattan_distances(const void *a, const void *b) {
  * @param  depth the current depth of the recursion
  * @return       a boolean indicating if a solution is found (1 for found, 0 otherwise)
  */
-int solve_dfs(const int board[], int depth) {
+int solve_dfs(const int board[], hashmap *hm, int depth) {
     iter++;
-    #pragma omp master
     if (iter % 1000 == 0 && DEBUG)
-        printf("current depth: %d, best depth: %d, iterations: %ld\n", depth, best_depth, iter);
+        printf("current depth: %d, best depth: %d, iterations: %ld, thread: %d\n", depth, best_depth, iter, omp_get_thread_num());
 
     if (check_solved(board, BOARD_LENGTH)) {
         best_depth = depth - 1;
@@ -178,7 +177,7 @@ int solve_dfs(const int board[], int depth) {
 
         solution_found = 1;
 
-        if(DEBUG)printf("solved! Best depth: %d, iterations: %ld\n", best_depth, iter);
+        if(DEBUG)printf("solved! Best depth: %d, iterations: %ld, thread: %d\n", best_depth, iter, omp_get_thread_num());
         //print_board(board, BOARD_SIDE);
         return 1;
     }
@@ -227,12 +226,15 @@ int solve_dfs(const int board[], int depth) {
 
             // swap the 0 with a possible index
             swap(board, new_board, BOARD_LENGTH, pos, direction);
+            // todo hashmap_get() et vérifier la profondeur
 
-            if (hashmap_set_if_lower(h, new_board, depth)) {
+
+            //if (hashmap_set_if_lower(h, new_board, depth)) {
+            if(hashmap_insert(hm, new_board, depth)){
                 int res;
-                #pragma omp task shared(res) firstprivate(new_board)
+                #pragma omp task shared(res) shared(hm) firstprivate(new_board)
                 {
-                    res = solve_dfs(new_board, depth + 1) ;
+                    res = solve_dfs(new_board, hm, depth + 1) ;
                 }
                 #pragma omp taskwait
                 found = found || res;
@@ -288,7 +290,7 @@ int main(int argc, char const *argv[]) {
     if (argc >= 4) 
         thread_count = atoi(argv[3]);
 
-    h = hashmap_create(1000, BOARD_LENGTH);
+    h = hashmap_create();
     s = stack_create(max_depth);
     best_moves = malloc(max_depth * sizeof(int));
 
@@ -296,10 +298,10 @@ int main(int argc, char const *argv[]) {
 
     long t = clock();
     
-    #pragma omp parallel num_threads(thread_count) firstprivate(board)
+    #pragma omp parallel num_threads(thread_count) firstprivate(board) shared(h)
     {
         #pragma omp single
-        solve_dfs(board, 0);        // start the search    
+        solve_dfs(board, h, 0);        // start the search    
     }
     
     t = clock() - t;
@@ -317,6 +319,8 @@ int main(int argc, char const *argv[]) {
         printf("No solution found.\nthreads:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f",
             thread_count, max_depth, iter, time_taken);
     }
+
     stack_free(s);
+    hashmap_free(h);
     return 0;
 }
