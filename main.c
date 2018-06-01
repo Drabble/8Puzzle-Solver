@@ -12,8 +12,9 @@
 #define BOARD_SIDE 3
 #define BOARD_LENGTH BOARD_SIDE * BOARD_SIDE
 #define MAX_DEPTH 20
+#define MAX_LEVEL 20
 #define COLOR 1
-#define DEBUG 1
+#define DEBUG 0
 
 int max_depth;      // maximum dpeth for the dfs algorithm
 int best_depth;     // the current depth where a solution has been found
@@ -164,13 +165,15 @@ int cmp_manhattan_distances(const void *a, const void *b) {
  * @param  depth the current depth of the recursion
  * @return       a boolean indicating if a solution is found (1 for found, 0 otherwise)
  */
-int solve_dfs(const int board[], hashmap *hm, int depth) {
+void solve_dfs(const int board[], hashmap *hm, int depth) {
+    #pragma omp atomic update
     iter++;
+
     if (iter % 1000 == 0 && DEBUG)
         printf("current depth: %d, best depth: %d, iterations: %ld, thread: %d\n", depth, best_depth, iter, omp_get_thread_num());
 
     if (depth >= max_depth || depth >= best_depth)
-        return 0;
+        return;
 
     if (check_solved(board, BOARD_LENGTH)) {
 
@@ -189,7 +192,7 @@ int solve_dfs(const int board[], hashmap *hm, int depth) {
         if(DEBUG)printf("solved! Best depth: %d, iterations: %ld, thread: %d\n", best_depth, iter, omp_get_thread_num());
         //print_board(board, BOARD_SIDE);
 
-        return 1;
+        return;
     }
 
 
@@ -224,7 +227,7 @@ int solve_dfs(const int board[], hashmap *hm, int depth) {
     int found = 0;
     for (int i = 0; i < 4; i++) {
         if (depth >= best_depth)
-            return found;
+            return;
 
         int direction = directions[i].pos;
         if (direction >= 0 && direction < BOARD_LENGTH) {
@@ -238,21 +241,18 @@ int solve_dfs(const int board[], hashmap *hm, int depth) {
 
 
             //if (hashmap_set_if_lower(h, new_board, depth)) {
-            if(hashmap_insert(hm, new_board, depth)){
-                int res;
-                #pragma omp task shared(res) shared(hm) firstprivate(new_board)
-                {
-                    res = solve_dfs(new_board, hm, depth + 1) ;
-                }
-                #pragma omp taskwait
-                found = found || res;
+            if(hashmap_insert(hm, new_board, depth))
+            {
+                #pragma omp task shared(hm) firstprivate(new_board) if(omp_get_level() < MAX_LEVEL)
+                solve_dfs(new_board, hm, depth + 1);
             }
+
+            #pragma omp taskwait
             free(new_board);
             stack_pop(s);
         }
     }
-
-    return found;
+    return;
 }
 
 
@@ -308,7 +308,7 @@ int main(int argc, char const *argv[]) {
     
     #pragma omp parallel num_threads(thread_count) firstprivate(board) shared(h)
     {
-        #pragma omp single
+        #pragma omp single nowait
         solve_dfs(board, h, 0);        // start the search    
     }
     
@@ -327,7 +327,7 @@ int main(int argc, char const *argv[]) {
         printf("No solution found.\nthreads:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f",
             thread_count, max_depth, iter, time_taken);
     }
-
+    free(best_moves);
     stack_free(s);
     hashmap_free(h);
     return 0;

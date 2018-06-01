@@ -20,6 +20,9 @@ hashmap *hashmap_create()
 
 void hashmap_free(hashmap *hm)
 {
+   
+    free(hm->primary_buckets[0][0]);
+    free(hm->primary_buckets[0]);
     free(hm->primary_buckets);
     free(hm);
 }
@@ -104,7 +107,8 @@ int hashmap_list_insert(node *head, node *n)
     while(1)
     {
         if (hashmap_find(head, n->reversed_key, n->sentinel, &prev, &crt))
-            if (n->value >= crt->value)
+            // check if the current depth is lower than the one already stored
+            if (n->value >= crt->value) 
                return 0; 
         
         n->next = crt;
@@ -201,14 +205,4 @@ int hashmap_insert(hashmap* hm, int* item, int value)
     }
 
     return 0;
-}
-
-int hashmap_remove(int* key)
-{
-
-}
-
-int hashmap_contains(int* key)
-{
-
 }
