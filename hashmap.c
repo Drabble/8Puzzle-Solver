@@ -8,7 +8,6 @@
 #define MAX_LOAD 2
 #define KEY_SIZE 9
 
-
 hashmap *hashmap_create()
 {
     hashmap* new_hashmap = malloc(sizeof(hashmap));
@@ -152,7 +151,6 @@ int hashmap_find(node *head, int reversed_key, int is_sentinel, node **prev, nod
         {
             if (*crt == NULL)
                 return 0;
-
             next.n = (*crt)->next;
             if (next.value & 0x1)
             {

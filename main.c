@@ -169,21 +169,29 @@ int solve_dfs(const int board[], hashmap *hm, int depth) {
     if (iter % 1000 == 0 && DEBUG)
         printf("current depth: %d, best depth: %d, iterations: %ld, thread: %d\n", depth, best_depth, iter, omp_get_thread_num());
 
-    if (check_solved(board, BOARD_LENGTH)) {
-        best_depth = depth - 1;
+    if (depth >= max_depth || depth >= best_depth)
+        return 0;
 
-        memset(best_moves, -1, max_depth);
-        stack_dump(s, best_moves);
+    if (check_solved(board, BOARD_LENGTH)) {
+
+        #pragma omp critical
+        {
+            if(best_depth > depth - 1){
+                best_depth = depth - 1;
+
+                memset(best_moves, -1, max_depth);
+                stack_dump(s, best_moves);
+            }
+        }
 
         solution_found = 1;
 
         if(DEBUG)printf("solved! Best depth: %d, iterations: %ld, thread: %d\n", best_depth, iter, omp_get_thread_num());
         //print_board(board, BOARD_SIDE);
+
         return 1;
     }
 
-    if (depth >= max_depth || depth >= best_depth)
-        return 0;
 
     // calculate position of the 0 (empty cell)
     int pos;
