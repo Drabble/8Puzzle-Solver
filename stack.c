@@ -34,11 +34,8 @@ int stack_is_empty(stack *s)
 void stack_push(stack* s, int v){
     if(stack_is_full(s))
         return;
-    #pragma omp critical
-    {
-        s->values[s->next] = v;
-        s->next++;
-    }
+    s->values[s->next] = v;
+    s->next++;
 }
 
 
@@ -46,11 +43,8 @@ int stack_pop(stack* s){
     if(stack_is_empty(s))
         return -1;
     int value;
-    #pragma omp critical
-    {
-        s->next--;
-        value = s->next;
-    }
+    s->next--;
+    value = s->next;
 
     return value;
 }
