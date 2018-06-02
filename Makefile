@@ -111,46 +111,46 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named PCM
+# Target rules for targets named PCM_semi
 
 # Build rule for target.
-PCM: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 PCM
-.PHONY : PCM
+PCM_semi: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 PCM_semi
+.PHONY : PCM_semi
 
 # fast build rule for target.
-PCM/fast:
-	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/build
-.PHONY : PCM/fast
+PCM_semi/fast:
+	$(MAKE) -f CMakeFiles/PCM_semi.dir/build.make CMakeFiles/PCM_semi.dir/build
+.PHONY : PCM_semi/fast
 
 # target to build an object file
 hashmap.o:
-	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/hashmap.o
+	$(MAKE) -f CMakeFiles/PCM_semi.dir/build.make CMakeFiles/PCM_semi.dir/hashmap.o
 .PHONY : hashmap.o
 
 # target to preprocess a source file
 hashmap.i:
-	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/hashmap.i
+	$(MAKE) -f CMakeFiles/PCM_semi.dir/build.make CMakeFiles/PCM_semi.dir/hashmap.i
 .PHONY : hashmap.i
 
 # target to generate assembly for a file
 hashmap.s:
-	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/hashmap.s
+	$(MAKE) -f CMakeFiles/PCM_semi.dir/build.make CMakeFiles/PCM_semi.dir/hashmap.s
 .PHONY : hashmap.s
 
 # target to build an object file
 main.o:
-	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/main.o
+	$(MAKE) -f CMakeFiles/PCM_semi.dir/build.make CMakeFiles/PCM_semi.dir/main.o
 .PHONY : main.o
 
 # target to preprocess a source file
 main.i:
-	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/main.i
+	$(MAKE) -f CMakeFiles/PCM_semi.dir/build.make CMakeFiles/PCM_semi.dir/main.i
 .PHONY : main.i
 
 # target to generate assembly for a file
 main.s:
-	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/main.s
+	$(MAKE) -f CMakeFiles/PCM_semi.dir/build.make CMakeFiles/PCM_semi.dir/main.s
 .PHONY : main.s
 
 # Help Target
@@ -160,7 +160,7 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... rebuild_cache"
-	@echo "... PCM"
+	@echo "... PCM_semi"
 	@echo "... edit_cache"
 	@echo "... hashmap.o"
 	@echo "... hashmap.i"
