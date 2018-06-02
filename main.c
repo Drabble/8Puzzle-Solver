@@ -257,6 +257,27 @@ void parse_board(int *board, const char *string) {
     }
 }
 
+void print_csv_report(double time_taken)
+{
+    printf("%d;%d;%d;%ld;%f;%d\n", 1, best_depth, max_depth, iter, time_taken, best_depth == INT_MAX);
+}
+
+void print_text_report(double time_taken)
+{
+    printf("==================================\n");
+    if (best_depth != INT_MAX) {
+        printf("Solution found!\nbest depth:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f\npath:\n\n",
+            best_depth, max_depth, iter, time_taken);
+        char *dirs[] = {"UP", "DOWN", "LEFT", "RIGHT"};
+        for(int i = 0; i < best_depth + 1; i++){
+            printf("  %3d. %s\n",i, dirs[best_moves[i]]);
+        }
+    } else {
+        printf("No solution found.\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f",
+            max_depth, iter, time_taken);
+    }
+}
+
 
 int main(int argc, char const *argv[]) {
     best_depth = INT_MAX;
@@ -279,12 +300,18 @@ int main(int argc, char const *argv[]) {
         shuffle(board, (size_t) BOARD_LENGTH);
     }
 
+    int output = 0;
+    
+    // type of output: 0 for text, 1 for csv
+    if (argc >= 4) 
+        output = atoi(argv[3]);
+
     h = hashmap_create(1000, BOARD_LENGTH);
     s = stack_create(max_depth);
     best_moves = malloc(max_depth * sizeof(int));
 
-    print_board(board, BOARD_SIDE);
-
+    if(!output) print_board(board, BOARD_SIDE);
+    
     long t = clock();
     
     // start the search    
@@ -293,15 +320,13 @@ int main(int argc, char const *argv[]) {
     t = clock() - t;
     double time_taken = ((double) t) / CLOCKS_PER_SEC; // in seconds
 
-    printf("==================================\n");
-    if (solution_found) {
-        printf("Solution found!\nbest depth:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f\npath:\n\n", best_depth, max_depth, iter, time_taken);
-        char *dirs[] = {"UP", "DOWN", "LEFT", "RIGHT"};
-        for(int i = 0; i < best_depth + 1; i++){
-            printf("  %3d. %s\n",i, dirs[best_moves[i]]);
-        }
-    } else {
-        printf("No solution found.\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f", max_depth, iter, time_taken);
+    if (output)
+    {
+        print_csv_report(time_taken);
+    }
+    else
+    {
+        print_text_report(time_taken);
     }
     stack_free(s);
     return 0;
