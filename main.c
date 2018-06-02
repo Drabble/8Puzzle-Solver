@@ -13,10 +13,10 @@
 #define MAX_DEPTH 20
 #define MAX_LEVEL 20
 #define COLOR 1
-#define DEBUG 1
+#define DEBUG 0
 
 int max_depth;      // maximum dpeth for the dfs algorithm
-int best_depth = -1;     // the current depth where a solution has been found
+int best_depth;     // the current depth where a solution has been found
 int *best_moves;    // the array containing the current best path
 long iter = 0;      // the iterations count
 
@@ -310,7 +310,7 @@ int main(int argc, char const *argv[]) {
     double time_taken = ((double) t) / CLOCKS_PER_SEC; // in seconds
 
     printf("==================================\n");
-    if (best_depth >= 0) {
+    if (best_depth != INT_MAX) {
         printf("Solution found!\nthreads:\t%d\nbest depth:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f\npath:\n\n",
             thread_count, best_depth, max_depth, iter, time_taken);
         char *dirs[] = {"UP", "DOWN", "LEFT", "RIGHT"};
