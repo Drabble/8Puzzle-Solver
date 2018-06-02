@@ -183,7 +183,7 @@ void solve_dfs(int board[], hashmap *hm, int* path, int depth) {
             if(best_depth > depth - 1){
                 best_depth = depth - 1;
 
-                memcpy(best_moves, path, best_depth);
+                memcpy(best_moves, path, best_depth * sizeof(int));
                 free(path);
             }
         }
@@ -237,7 +237,7 @@ void solve_dfs(int board[], hashmap *hm, int* path, int depth) {
 
 
             int* newPath = malloc((depth + 1) * sizeof(int));
-            memcpy(newPath, path, depth);
+            memcpy(newPath, path, depth *sizeof(int));
             newPath[depth] = directions[i].dir;
 
             // swap the 0 with a possible index
