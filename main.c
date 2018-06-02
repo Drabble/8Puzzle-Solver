@@ -14,7 +14,7 @@
 #define MAX_DEPTH 20
 #define MAX_LEVEL 20
 #define COLOR 1
-#define DEBUG 0
+#define DEBUG 1
 
 int max_depth;      // maximum dpeth for the dfs algorithm
 int best_depth;     // the current depth where a solution has been found
@@ -131,19 +131,25 @@ void shuffle(int *array, size_t n) {
  * @param direction element to swap with the cell 0
  * @return          Manhattan score
  */
-size_t manhattan_distance_with_swap(const int board[], const size_t length, const size_t side, int direction) {
+size_t manhattan_distance(const int board[], const size_t length, const size_t side, int direction) {
     size_t total = 0;
     size_t i;
     for (i = 0; i < length; i++) {
-        int xi = i % side;
-        int yi = i / side;
-        if (board[i] == 0) {
-            total += abs(xi - board[direction] % side) + abs(yi - board[direction] / side);
-        } else if (i == direction) {
-            total += abs(xi - 0) + abs(yi - 0);
-        } else {
-            total += abs(xi - board[i] % side) + abs(yi - board[i] / side);
+        // Compute where the element should be
+        int x = (board[i] - 1) % side;
+        int y = (board[i] - 1) / side;
+
+        // Element 0 goes at the end
+        if(board[i] == 0) {
+            x = BOARD_SIDE - 1;
+            y = BOARD_SIDE - 1;
         }
+
+        // Compute where the element is
+        int x2 = i % side;
+        int y2 = i / side;
+
+        total += abs(x - x2) + abs(y - y2);
     }
     return total;
 }
@@ -165,7 +171,7 @@ int cmp_manhattan_distances(const void *a, const void *b) {
  * @param  depth the current depth of the recursion
  * @return       a boolean indicating if a solution is found (1 for found, 0 otherwise)
  */
-void solve_dfs(const int board[], hashmap *hm, int depth) {
+void solve_dfs(int board[], hashmap *hm, int depth) {
     #pragma omp atomic update
     iter++;
 
@@ -190,9 +196,7 @@ void solve_dfs(const int board[], hashmap *hm, int depth) {
         solution_found = 1;
 
         if(DEBUG)printf("solved! Best depth: %d, iterations: %ld, thread: %d\n", best_depth, iter, omp_get_thread_num());
-        //print_board(board, BOARD_SIDE);
-
-        return;
+            //print_board(board, BOARD_SIDE);
     }
 
 
@@ -213,12 +217,16 @@ void solve_dfs(const int board[], hashmap *hm, int depth) {
 
     // compute Manhattan distances
     for (int i = 0; i < 4; i++) {
+        board[pos] = board[directions[i].pos];
+        board[directions[i].pos] = 0;
         directions[i].manhattan_distance =
-                directions[i].pos > 0 && directions[i].pos < BOARD_LENGTH ? manhattan_distance_with_swap(board,
+                directions[i].pos > 0 && directions[i].pos < BOARD_LENGTH ? manhattan_distance(board,
                                                                                                       BOARD_LENGTH,
                                                                                                       BOARD_SIDE,
                                                                                                       directions[i].pos)
                                                                           : INT_MAX;
+        board[directions[i].pos] = board[pos];
+        board[pos] = 0;
     }
 
     // sort by manhattan distance
@@ -237,6 +245,7 @@ void solve_dfs(const int board[], hashmap *hm, int depth) {
 
             // swap the 0 with a possible index
             swap(board, new_board, BOARD_LENGTH, pos, direction);
+
             // todo hashmap_get() et vérifier la profondeur
 
 
@@ -252,7 +261,6 @@ void solve_dfs(const int board[], hashmap *hm, int depth) {
             stack_pop(s);
         }
     }
-    return;
 }
 
 
