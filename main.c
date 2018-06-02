@@ -233,27 +233,26 @@ void solve_dfs(int board[], hashmap *hm, int* path, int depth) {
 
         int direction = directions[i].pos;
         if (direction >= 0 && direction < BOARD_LENGTH) {
+            // Create new board and swap the 0 with a possible index
             int *new_board = malloc(BOARD_LENGTH * sizeof(int));
-
-
-            int* newPath = malloc((depth + 1) * sizeof(int));
-            memcpy(newPath, path, depth *sizeof(int));
-            newPath[depth] = directions[i].dir;
-
-            // swap the 0 with a possible index
             swap(board, new_board, BOARD_LENGTH, pos, direction);
+
+            // Create a new path with the new index
+            int* new_path = malloc((depth + 1) * sizeof(int));
+            memcpy(new_path, path, depth *sizeof(int));
+            new_path[depth] = directions[i].dir;
 
             if(hashmap_insert(hm, new_board, depth))
             {
                 #pragma omp task shared(hm) firstprivate(new_board) if(omp_get_level() < MAX_LEVEL)
-                solve_dfs(new_board, hm, newPath, depth + 1);
+                solve_dfs(new_board, hm, new_path, depth + 1);
             }
-
             #pragma omp taskwait
+
             free(new_board);
+            free(new_path);
         }
     }
-    free(path);
 }
 
 
