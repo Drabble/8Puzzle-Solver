@@ -98,7 +98,7 @@ void swap(const int *origin, int *dest, int size, int from, int to) {
 
 
 /**
- * Shuffle an array radomly with a 0 at (0,0)
+ * Shuffle an array randomly with a 0 at (0,0)
  * @param array a pointer to the board to shuffle
  * @param n     the size of the array
  */

@@ -36,7 +36,7 @@ hashmap *hashmap_create();
 void hashmap_free(hashmap *hm);
 int reverse(int value);
 int hash(int *item);
-int hashmap_initialize();
+int hashmap_initialize(hashmap* hm);
 node *get_secondary_bucket(hashmap *hm, int key);
 int hashmap_list_insert(node *head, node *n);
 node *hashmap_initialize_bucket(hashmap *hm, int key);
