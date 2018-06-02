@@ -1,0 +1,320 @@
+commit 7495b66b480bc4e72f119af18262c0eccd5ce8bd
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Sat Jun 2 20:29:04 2018 +0200
+
+    Add some more comments
+
+commit e1328c209bf8113e3d505d06e3b7548a0c9d2b5f
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Sat Jun 2 19:57:56 2018 +0200
+
+    Add the script used to run the tests and the results
+
+commit 4194552ceb4b9196583913d82db340ce7f3deeb8
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Sat Jun 2 13:51:49 2018 +0200
+
+    Add a csv output to automate the benchmarks
+
+commit b8ce7e76d11630363c6cbea9adf6d9dfb3ece957
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Sat Jun 2 13:35:43 2018 +0200
+
+    Remove unused files
+
+commit fe09b56dc139d96d01816bab7b3728145e657a75
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Sat Jun 2 13:31:02 2018 +0200
+
+    Fix print when there is no solution found
+
+commit b37edff64b90e61a90b45dcea24e8917484598dc
+Merge: d4959b2 6453dce
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Sat Jun 2 13:19:32 2018 +0200
+
+    Fix merge
+
+commit d4959b23dea9315ec0bc0815111c89ead5a972a9
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Sat Jun 2 12:41:17 2018 +0200
+
+    Rename newPath to new_path
+
+commit 6453dcece4c38b63b18e370f09181ca71f61a31c
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Sat Jun 2 12:39:05 2018 +0200
+
+    Make the computing fully parallel
+    
+    Now that the path is stored in arrays instead of stack, each task can be
+    its own direction parallely, without aving to wait for the other.
+    
+    There's a memory leak somewhere preventing us to make big computations,
+    in the hashmap buckets implementation I think.
+
+commit 1b49d9a0f50e37b76692b5a117066fff3d1b2f64
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Sat Jun 2 12:32:30 2018 +0200
+
+    Fix the memcpy for the path array
+
+commit 0f13b7a6ef6f87177a7e74d365378a11347068eb
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Sat Jun 2 12:15:51 2018 +0200
+
+    Use int array instead of stack
+
+commit ccd2d4795e74d6cfd3ee286a62fc161dba3de526
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Sat Jun 2 11:43:09 2018 +0200
+
+    Fix the manhattan distance function
+
+commit 4f83737a394111485ace9905a3a83f8185652c47
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Fri Jun 1 22:15:50 2018 +0200
+
+    Fix the parallelization (i think?)
+    
+    It seems that limiting the levels of the sections (omp_get_level())
+      makes the tasks more spread through the threads.
+
+commit 330a9837e5d29353d452d7e9f33d255237053760
+Merge: 9a086d5 b3ca34e
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Fri Jun 1 16:11:46 2018 +0200
+
+    Merge branch 'master' of https://github.com/servietsky777/PCM
+
+commit 9a086d55d44d3429358d7087977cd749fa6cc847
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Fri Jun 1 15:59:11 2018 +0200
+
+    Implement a distributed hashmap
+    
+    The main bottleneck for the first version was the insertion in the
+    hashmap. To fix it, the implementation of the hashmap saw during the
+    lesson has been adapted to our usecase. The main difference is that a
+    node has now a value (the depth of the board). A successful insert is
+    made when a board is in the set and the value of its node is less than
+    the one already in the set (if any).
+
+commit b3ca34e25892c145efdf87ca9c04349323022359
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Fri Jun 1 00:27:33 2018 +0200
+
+    Atomic increment on iter
+
+commit 67ebd44f7a1dd55f507c212751190058fee448a0
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Fri Jun 1 00:09:18 2018 +0200
+
+    Lock on best depth
+
+commit b35384695223f7db2bc94c8a45d624a520a00073
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Thu May 31 23:28:28 2018 +0200
+
+    One lock per bucket
+
+commit d2cf0ebc5394c03b2fc86a5b4991c35677b8b9cf
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Thu May 31 15:09:45 2018 +0200
+
+    Modify the code for a first and ugly parallel version
+
+commit 0b58eb8c9187974e39c8560a912d7eb7c1da9bb6
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Thu May 31 12:51:01 2018 +0200
+
+    Add comments and remove the omp stuff for the seq version
+
+commit bd0103413dcc449cf9f506084c9916d124138c6d
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Thu May 31 09:52:10 2018 +0200
+
+    Print the found solutions only in debug mode
+
+commit 6eaa308373ea1fb725a2a7ab78274a328b995ef9
+Merge: 6089f7d 24d94ca
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Thu May 31 09:48:11 2018 +0200
+
+    Merge branch 'master' of https://github.com/servietsky777/PCM
+
+commit 6089f7da8b0f8d177b272a6d25f7d7ac698a7442
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Thu May 31 09:42:22 2018 +0200
+
+    Print better logs
+
+commit 24d94cac5c7aa5dfaa14615e467133fb8744f4fe
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Wed May 30 23:27:53 2018 +0200
+
+    Show no solution found message
+
+commit cbb62f485b2fa94bf25f367f31685a3505f5822f
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Wed May 30 22:42:23 2018 +0200
+
+    Add a copy of the key into the hashmap
+    
+    Since the new_board is freed after being inserted in the hashmap, a
+    pointer does not work.
+
+commit 58c9a27aadfe24003728cfb3cfc1d44e489e9ef1
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Wed May 30 22:32:23 2018 +0200
+
+    Fix the hashmap set
+    
+    The hashmap_set_if_lower was freeing the new_board when it shouldn't.
+
+commit da90551482d2e61255afd714fe990cefcdb6b8d8
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Wed May 30 22:15:01 2018 +0200
+
+    Remvoe hashmap temporarily
+
+commit 920a7882fca43adae05e589857bbd9967a86b36d
+Merge: 617fa35 7cc489b
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Wed May 30 21:25:28 2018 +0200
+
+    Merge
+
+commit 617fa3504b936bb762f11587b730e3e7ff18bd13
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Wed May 30 21:22:38 2018 +0200
+
+    Put hashmap
+
+commit 7cc489b5bd66302d1f47eebbc1c51b27a5da05bd
+Merge: 86f0e0f 3300df4
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Wed May 30 21:16:47 2018 +0200
+
+    Merge branch 'master' of https://github.com/servietsky777/PCM
+
+commit 86f0e0f7414794d6043b8ca34df38a049cc69a49
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Wed May 30 21:14:34 2018 +0200
+
+    Add the stack freeing and some memory checks
+    
+    This adds a stack_dump function that copies the content of a stack to an
+    array.
+
+commit 3300df45ec712c4819ce43bda69874a3eeb441a1
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Wed May 30 19:10:15 2018 +0200
+
+    Count time to find the best solution
+
+commit 5bed12244eb13fd4815182bd627d788cb2af7e08
+Author: Antoine Drabble <antoine.drabble@gmail.com>
+Date:   Wed May 30 19:02:27 2018 +0200
+
+    Make the stack work
+
+commit fdad5052f9b6138250e27cd1b5d2e4a9151638c0
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Wed May 30 18:01:52 2018 +0200
+
+    Remove a lot of things and make it work
+    
+    The tree and the hashmap were not needed. The beginning of a stack
+    implementation is in this commit too.
+
+commit a8b9beb7ec72e93b5b3cab27e4740e5fca717906
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Sun May 27 20:39:14 2018 +0200
+
+    Add a tree to store the possible solutions
+
+commit 422ca60e35780ffcc9e296c8bc20631b1f266998
+Merge: decacd2 f28ea92
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Thu May 24 15:37:24 2018 +0200
+
+    Merge branch 'master' of https://github.com/servietsky777/PCM
+
+commit decacd25122fd3cf6746988dd866000a3a61aaf0
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Thu May 24 15:37:07 2018 +0200
+
+    Fix the name of the max int constant
+
+commit 94ba8c090afddfb459a4e2bdd8daa8d98b508694
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Thu May 24 15:36:21 2018 +0200
+
+    Add best depth
+
+commit f28ea92f7f347f6c4296de0a8e05f5c6faa7f00c
+Author: antoine.drabble <antoine.drabble@gmail.com>
+Date:   Thu May 24 15:33:02 2018 +0200
+
+    Fix sort order
+
+commit 95d70bf798c44d6a3a98accf3cb72a361f3e2d52
+Author: antoine.drabble <antoine.drabble@gmail.com>
+Date:   Thu May 24 15:21:24 2018 +0200
+
+    Compute and sort by Manhattan score
+
+commit 115ee980d6c6b74ae662fee9d12d89770c3ec841
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Thu May 17 22:17:25 2018 +0200
+
+    Refactor the code to fix dfs
+
+commit 44047e55fb4e5d5328fe411ef5991b7588014dd1
+Author: antoine.drabble <antoine.drabble@gmail.com>
+Date:   Thu May 17 12:41:15 2018 +0200
+
+    Roll back to DFS and hashmap
+
+commit 4a864d08e18a22aab368f4f039a5b8fc2f355baa
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Thu May 17 11:34:55 2018 +0200
+
+    Free the list, fix the shuffle, add colors to the output
+
+commit c6f702c5c97526d2c9a6b012b48f31129ca69805
+Author: antoine.drabble <antoine.drabble@gmail.com>
+Date:   Sun May 6 01:31:23 2018 +0200
+
+    First sequential version
+
+commit 7fe0cea341b47f0e5dd51ebd66a7d2f4d45a78a3
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Wed May 2 23:04:08 2018 +0200
+
+    Ignore some useless CMake files
+
+commit d0548a392e8a23d75cd13fe072eb2b93b877953d
+Author: Loïc Stankovic <loicstankovic@hotmail.com>
+Date:   Wed May 2 22:58:39 2018 +0200
+
+    Add the shuffle function to randomize the board
+
+commit 9f520b36866f02ce9e474583134d9dd3e5c3ea7c
+Author: antoine.drabble <antoine.drabble@gmail.com>
+Date:   Sun Apr 29 23:24:08 2018 +0200
+
+    Create board
+
+commit a1e27c5a8b9eea8a2fe48681381ea53755a60ee4
+Author: antoine.drabble <antoine.drabble@gmail.com>
+Date:   Sun Apr 29 14:19:19 2018 +0200
+
+    Initial commit
+
+commit f9cdf4572b7975dcb2059794d265af34c3452b46
+Author: servietsky777 <antoine.drabble@gmail.com>
+Date:   Sun Apr 29 14:14:59 2018 +0200
+
+    Initial commit
