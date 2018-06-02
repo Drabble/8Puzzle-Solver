@@ -264,6 +264,26 @@ void parse_board(int *board, const char *string) {
     }
 }
 
+void print_csv_report(double time_taken, int thread_count)
+{
+    printf("%d;%d;%d;%ld;%f;%d\n", thread_count, best_depth, max_depth, iter, time_taken, best_depth == INT_MAX);
+}
+
+void print_text_report(double time_taken, int thread_count)
+{
+    printf("==================================\n");
+    if (best_depth != INT_MAX) {
+        printf("Solution found!\nthreads:\t%d\nbest depth:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f\npath:\n\n",
+            thread_count, best_depth, max_depth, iter, time_taken);
+        char *dirs[] = {"UP", "DOWN", "LEFT", "RIGHT"};
+        for(int i = 0; i < best_depth + 1; i++){
+            printf("  %3d. %s\n",i, dirs[best_moves[i]]);
+        }
+    } else {
+        printf("No solution found.\nthreads:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f",
+            thread_count, max_depth, iter, time_taken);
+    }
+}
 
 int main(int argc, char const *argv[]) {
     best_depth = INT_MAX;
@@ -292,11 +312,17 @@ int main(int argc, char const *argv[]) {
     if (argc >= 4) 
         thread_count = atoi(argv[3]);
 
+    int output = 0;
+    
+    // type of output: 0 for text, 1 for csv
+    if (argc >= 5) 
+        output = atoi(argv[4]);
+
 
     hashmap *h = hashmap_create();
     best_moves = malloc(max_depth * sizeof(int));
 
-    print_board(board, BOARD_SIDE);
+    if(!output) print_board(board, BOARD_SIDE);
 
     long t = clock();
     
@@ -309,18 +335,15 @@ int main(int argc, char const *argv[]) {
     t = clock() - t;
     double time_taken = ((double) t) / CLOCKS_PER_SEC; // in seconds
 
-    printf("==================================\n");
-    if (best_depth != INT_MAX) {
-        printf("Solution found!\nthreads:\t%d\nbest depth:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f\npath:\n\n",
-            thread_count, best_depth, max_depth, iter, time_taken);
-        char *dirs[] = {"UP", "DOWN", "LEFT", "RIGHT"};
-        for(int i = 0; i < best_depth + 1; i++){
-            printf("  %3d. %s\n",i, dirs[best_moves[i]]);
-        }
-    } else {
-        printf("No solution found.\nthreads:\t%d\nmax depth:\t%d\niterations:\t%ld\ntime(sec):\t%f",
-            thread_count, max_depth, iter, time_taken);
+    if (output)
+    {
+        print_csv_report(time_taken, thread_count);
     }
+    else
+    {
+        print_text_report(time_taken, thread_count);
+    }
+
     free(best_moves);
     hashmap_free(h);
     return 0;
