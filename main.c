@@ -228,7 +228,6 @@ void solve_dfs(int board[], hashmap *hm, int depth) {
     // sort by manhattan distance
     qsort(directions, 4, sizeof(move), cmp_manhattan_distances);
 
-    int found = 0;
     for (int i = 0; i < 4; i++) {
         if (depth >= best_depth)
             return;
@@ -353,7 +352,7 @@ int main(int argc, char const *argv[]) {
     {
         print_text_report(time_taken, thread_count);
     }
-    
+
     free(best_moves);
     stack_free(s);
     hashmap_free(h);

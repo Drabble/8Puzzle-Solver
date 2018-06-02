@@ -124,6 +124,21 @@ PCM/fast:
 .PHONY : PCM/fast
 
 # target to build an object file
+hashmap.o:
+	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/hashmap.o
+.PHONY : hashmap.o
+
+# target to preprocess a source file
+hashmap.i:
+	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/hashmap.i
+.PHONY : hashmap.i
+
+# target to generate assembly for a file
+hashmap.s:
+	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/hashmap.s
+.PHONY : hashmap.s
+
+# target to build an object file
 main.o:
 	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/main.o
 .PHONY : main.o
@@ -147,6 +162,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... PCM"
 	@echo "... edit_cache"
+	@echo "... hashmap.o"
+	@echo "... hashmap.i"
+	@echo "... hashmap.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
