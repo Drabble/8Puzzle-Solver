@@ -111,31 +111,31 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named PCM
+# Target rules for targets named PCM_seq
 
 # Build rule for target.
-PCM: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 PCM
-.PHONY : PCM
+PCM_seq: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 PCM_seq
+.PHONY : PCM_seq
 
 # fast build rule for target.
-PCM/fast:
-	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/build
-.PHONY : PCM/fast
+PCM_seq/fast:
+	$(MAKE) -f CMakeFiles/PCM_seq.dir/build.make CMakeFiles/PCM_seq.dir/build
+.PHONY : PCM_seq/fast
 
 # target to build an object file
 main.o:
-	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/main.o
+	$(MAKE) -f CMakeFiles/PCM_seq.dir/build.make CMakeFiles/PCM_seq.dir/main.o
 .PHONY : main.o
 
 # target to preprocess a source file
 main.i:
-	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/main.i
+	$(MAKE) -f CMakeFiles/PCM_seq.dir/build.make CMakeFiles/PCM_seq.dir/main.i
 .PHONY : main.i
 
 # target to generate assembly for a file
 main.s:
-	$(MAKE) -f CMakeFiles/PCM.dir/build.make CMakeFiles/PCM.dir/main.s
+	$(MAKE) -f CMakeFiles/PCM_seq.dir/build.make CMakeFiles/PCM_seq.dir/main.s
 .PHONY : main.s
 
 # Help Target
@@ -145,7 +145,7 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... rebuild_cache"
-	@echo "... PCM"
+	@echo "... PCM_seq"
 	@echo "... edit_cache"
 	@echo "... main.o"
 	@echo "... main.i"
