@@ -182,9 +182,7 @@ void solve_dfs(int board[], hashmap *hm, int* path, int depth) {
         {
             if(best_depth > depth - 1){
                 best_depth = depth - 1;
-
                 memcpy(best_moves, path, best_depth * sizeof(int));
-                free(path);
             }
         }
 
@@ -227,10 +225,8 @@ void solve_dfs(int board[], hashmap *hm, int* path, int depth) {
     // sort by manhattan distance
     qsort(directions, 4, sizeof(move), cmp_manhattan_distances);
 
+    #pragma omp taskloop shared(hm) firstprivate(board) if(omp_get_level() < MAX_LEVEL)
     for (int i = 0; i < 4; i++) {
-        if (depth >= best_depth)
-            return;
-
         int direction = directions[i].pos;
         if (direction >= 0 && direction < BOARD_LENGTH) {
             // Create new board and swap the 0 with a possible index
@@ -244,10 +240,8 @@ void solve_dfs(int board[], hashmap *hm, int* path, int depth) {
 
             if(hashmap_insert(hm, new_board, depth))
             {
-                #pragma omp task shared(hm) firstprivate(new_board) if(omp_get_level() < MAX_LEVEL)
                 solve_dfs(new_board, hm, new_path, depth + 1);
             }
-            #pragma omp taskwait
 
             free(new_board);
             free(new_path);
