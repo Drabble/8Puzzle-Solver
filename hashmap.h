@@ -1,6 +1,9 @@
 #ifndef HASHMAP_H
 #define HASHMAP_H
 
+/**
+ * The structure representing a hashmap list node
+ */
 typedef struct node
 {
     int sentinel;
@@ -10,6 +13,9 @@ typedef struct node
     struct node *next;
 } node;
 
+/**
+ * The structure representing an hashmap
+ */
 typedef struct hashmap
 {
     node ***primary_buckets;
@@ -17,6 +23,9 @@ typedef struct hashmap
     int size;
 } hashmap;
 
+/**
+ * An union type used to convert a node into an address, used for ABA problem
+ */
 typedef union
 {
     node *n;

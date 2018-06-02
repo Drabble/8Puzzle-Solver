@@ -5,9 +5,14 @@
 #include <limits.h>
 #include "hashmap.h"
 
-#define MAX_LOAD 2
-#define KEY_SIZE 9
+#define MAX_LOAD 2  // the maximum load of the hashmap
+#define KEY_SIZE 9  // the size of an item (the size of a board)
 
+/**
+ * Create a new hashmap
+ * 
+ * @return an empty hashmap
+ */
 hashmap *hashmap_create()
 {
     hashmap* new_hashmap = malloc(sizeof(hashmap));
@@ -18,6 +23,11 @@ hashmap *hashmap_create()
     return new_hashmap;
 }
 
+/**
+ * Free an hashmap
+ * 
+ * @param hm the hashmap to free
+ */
 void hashmap_free(hashmap *hm)
 {
    
@@ -27,6 +37,12 @@ void hashmap_free(hashmap *hm)
     free(hm);
 }
 
+/**
+ * Make a binary reverse of a 32 bits integer
+ * 
+ * @param  value the integer to reverse
+ * @return       the reversed integer
+ */
 int reverse(int value)
 {
     int number = value;
@@ -42,6 +58,12 @@ int reverse(int value)
     return res <<= s; // shift when v's highest bits are zero
 }
 
+/**
+ * Turn create a hash from a board
+ * 
+ * @param  key the board to hash
+ * @return     the corresponding hash
+ */
 int hash(int *key) {
     int hash = 17;
 
@@ -53,6 +75,12 @@ int hash(int *key) {
     return hash;
 }
 
+/**
+ * Initialize an empty hashmap, by creating a primary and secondary bucket.
+ *  
+ * @param  hm the hashmap structure to initialize
+ * @return    1 if the initialization is done correctly, 0 if not
+ */
 int hashmap_initialize(hashmap* hm)
 {
     hm->primary_buckets = (node ***) calloc(48, sizeof(node **));
@@ -76,6 +104,13 @@ int hashmap_initialize(hashmap* hm)
     return 0;
 }
 
+/**
+ * Get the secondary bucket according to the key
+ * 
+ * @param  hm  the hashmap structure to use
+ * @param  key the key of the element
+ * @return     the secondary bucket according to the given key
+ */
 node *get_secondary_bucket(hashmap* hm, int key)
 {
     int i, min, max;
@@ -100,6 +135,14 @@ node *get_secondary_bucket(hashmap* hm, int key)
     return hm->primary_buckets[i][key - min];
 }
 
+/**
+ * Insert a node in the list of a bucket. It will also check if thevalue of the
+ * node to insert is lower than the one already in the list.
+ * 
+ * @param  head the head of the list
+ * @param  n    the node to insert
+ * @return      1 if the insertion is done correctly, 0 if not
+ */
 int hashmap_list_insert(node *head, node *n)
 {
     node *prev, *crt;
@@ -118,6 +161,12 @@ int hashmap_list_insert(node *head, node *n)
     }
 }
 
+/**
+ * Initialize a new bucket
+ * @param  hm  the hashmap structure to use
+ * @param  key the key of the element requiring a new bucket
+ * @return     the sentinel node of the new bucket, or NULL if the initialization failed
+ */
 node *hashmap_initialize_bucket(hashmap* hm, int key)
 {
     node *sentinel, *parent_bucket, *prev;
@@ -142,8 +191,15 @@ node *hashmap_initialize_bucket(hashmap* hm, int key)
     return sentinel;
 }
 
-
-
+/**
+ * Find a node in the hashmap
+ * @param  head         the head node of the bucket
+ * @param  reversed_key the reversed key of the node to find
+ * @param  is_sentinel  the boolean telling if the node is a sentinel or not
+ * @param  prev         a pointer to the previous node (output)
+ * @param  crt          a pointer to the found node (output)
+ * @return              1 if the node is found, 0 if not
+ */
 int hashmap_find(node *head, int reversed_key, int is_sentinel, node **prev, node **crt)
 {
     conversion next;
@@ -178,6 +234,14 @@ int hashmap_find(node *head, int reversed_key, int is_sentinel, node **prev, nod
     }
 }
 
+/**
+ * Insert an element into the hashmap
+ * 
+ * @param  hm    the hashmap structure to use
+ * @param  item  the item to insert (a board)
+ * @param  value the value associated with the item (the depth)
+ * @return       1 if the insertion has been done correctly, 0 if it failed
+ */
 int hashmap_insert(hashmap* hm, int* item, int value)
 {
     node *bucket, *new_node;

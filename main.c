@@ -8,12 +8,12 @@
 
 #include "hashmap.h"
 
-#define BOARD_SIDE 3
-#define BOARD_LENGTH BOARD_SIDE * BOARD_SIDE
-#define MAX_DEPTH 20
-#define MAX_LEVEL 20
-#define COLOR 1
-#define DEBUG 0
+#define BOARD_SIDE 3    // side of the board
+#define BOARD_LENGTH BOARD_SIDE * BOARD_SIDE    // total length of an array representing a board
+#define MAX_DEPTH 20    // the default maximum depth for the DFS algo
+#define MAX_LEVEL 20    // the maximum number of OMP levels for recursion
+#define COLOR 0         // enable the colors in the terminal output
+#define DEBUG 0         // print the debug output
 
 int max_depth;      // maximum dpeth for the dfs algorithm
 int best_depth;     // the current depth where a solution has been found
@@ -264,11 +264,23 @@ void parse_board(int *board, const char *string) {
     }
 }
 
+/**
+ * Print a .csv formatted string of the results of the algorithm
+ * 
+ * @param time_taken   the execution time
+ * @param thread_count the number of threads
+ */
 void print_csv_report(double time_taken, int thread_count)
 {
     printf("%d;%d;%d;%ld;%f;%d\n", thread_count, best_depth, max_depth, iter, time_taken, best_depth == INT_MAX);
 }
 
+/**
+ * Print a nice output of the results of the algorithm
+ * 
+ * @param time_taken   the execution time
+ * @param thread_count the number of threads
+ */
 void print_text_report(double time_taken, int thread_count)
 {
     printf("==================================\n");
@@ -285,6 +297,12 @@ void print_text_report(double time_taken, int thread_count)
     }
 }
 
+/**
+ * The program's entry point
+ * @param  argc arguments count
+ * @param  argv arguments value
+ * @return      the return code of the program
+ */
 int main(int argc, char const *argv[]) {
     best_depth = INT_MAX;
 
