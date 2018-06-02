@@ -165,7 +165,7 @@ int cmp_manhattan_distances(const void *a, const void *b) {
  * @param  depth the current depth of the recursion
  * @return       a boolean indicating if a solution is found (1 for found, 0 otherwise)
  */
-void solve_dfs(const int board[], hashmap *hm, int depth) {
+void solve_dfs(int board[], hashmap *hm, int depth) {
     #pragma omp atomic update
     iter++;
 
@@ -213,12 +213,16 @@ void solve_dfs(const int board[], hashmap *hm, int depth) {
 
     // compute Manhattan distances
     for (int i = 0; i < 4; i++) {
+        board[pos] = board[directions[i].pos];
+        board[directions[i].pos] = 0;
         directions[i].manhattan_distance =
                 directions[i].pos > 0 && directions[i].pos < BOARD_LENGTH ? manhattan_distance_with_swap(board,
                                                                                                       BOARD_LENGTH,
                                                                                                       BOARD_SIDE,
                                                                                                       directions[i].pos)
                                                                           : INT_MAX;
+        board[directions[i].pos] = board[pos];
+        board[pos] = 0;
     }
 
     // sort by manhattan distance
